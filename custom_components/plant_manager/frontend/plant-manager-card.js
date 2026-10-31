@@ -23,7 +23,11 @@ function cardDue(care, lang) {
 
 class PlantManagerCard extends HTMLElement {
   static getStubConfig() {
-    return {};
+    return { title: "Plants", show_counts: true };
+  }
+
+  static getConfigElement() {
+    return document.createElement("plant-manager-card-editor");
   }
 
   setConfig(config) {
@@ -169,10 +173,51 @@ class PlantManagerCard extends HTMLElement {
   }
 }
 
+// Visual editor in the dashboard, built on Home Assistant's own form component.
+const EDITOR_SCHEMA = [
+  { name: "title", selector: { text: {} } },
+  { name: "show_counts", selector: { boolean: {} } },
+];
+const EDITOR_LABELS = {
+  title: "Title",
+  show_counts: "Show counts (plants, need water, problems)",
+};
+
+class PlantManagerCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = config;
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._form) this._form.hass = hass;
+  }
+
+  _render() {
+    if (!this._form) {
+      this._form = document.createElement("ha-form");
+      this._form.computeLabel = (schema) => EDITOR_LABELS[schema.name] || schema.name;
+      this._form.addEventListener("value-changed", (ev) => {
+        this._config = ev.detail.value;
+        this.dispatchEvent(
+          new CustomEvent("config-changed", { detail: { config: this._config }, bubbles: true, composed: true })
+        );
+      });
+      this.appendChild(this._form);
+    }
+    this._form.hass = this._hass;
+    this._form.schema = EDITOR_SCHEMA;
+    this._form.data = { title: "Plants", show_counts: true, ...this._config };
+  }
+}
+
 customElements.define("plant-manager-card", PlantManagerCard);
+customElements.define("plant-manager-card-editor", PlantManagerCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "plant-manager-card",
   name: "Plant Manager",
   description: "Plants that need water, with a quick watered button.",
+  preview: true,
 });

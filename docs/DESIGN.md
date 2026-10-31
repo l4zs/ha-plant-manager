@@ -180,6 +180,10 @@ Alerts have a stable key and are announced once (keys are stored across restarts
   right away.
 - **Daily reminder** (default 09:00): a summary of what to water and fertilize today, sent to the
   notify action.
+- **Per user** (stored in `.storage/plant_manager.notifications`): each Home Assistant user picks
+  phones (mobile_app devices, theirs first), a time for the summary, and whether problems are sent
+  right away. A phone picked by a user is left out of the integration's notify action, so nothing
+  arrives twice.
 
 ### Lovelace card
 `custom:plant-manager-card` lists plants that need attention with a 💧 button, and counts. It is

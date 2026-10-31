@@ -9,8 +9,9 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import selector
+from homeassistant.util import slugify
 import voluptuous as vol
 
 from .const import (
@@ -36,6 +37,30 @@ from .knowledge import OpenPlantbook, OpenPlantbookError
 _PASSWORD = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
 )
+
+
+def _notify_selector(hass: HomeAssistant) -> selector.SelectSelector:
+    """Phones with the Home Assistant app first (by device name), then other notify actions."""
+    phones = {
+        f"mobile_app_{slugify(name)}": name
+        for entry in hass.config_entries.async_entries("mobile_app")
+        if (name := entry.data.get("device_name"))
+    }
+    services = sorted(hass.services.async_services_for_domain("notify"))
+    options = [
+        selector.SelectOptionDict(value=f"notify.{s}", label=f"📱 {phones[s]}")
+        for s in services
+        if s in phones
+    ] + [
+        selector.SelectOptionDict(value=f"notify.{s}", label=f"notify.{s}")
+        for s in services
+        if s not in phones and s not in ("notify", "persistent_notification", "send_message")
+    ]
+    return selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=options, custom_value=True, mode=selector.SelectSelectorMode.DROPDOWN
+        )
+    )
 
 
 class PlantManagerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -143,7 +168,7 @@ class PlantManagerOptionsFlow(OptionsFlow):
         schema = vol.Schema(
             {
                 vol.Required(CONF_NOTIFY_ALERTS): selector.BooleanSelector(),
-                vol.Optional(CONF_NOTIFY_SERVICE): selector.TextSelector(),
+                vol.Optional(CONF_NOTIFY_SERVICE): _notify_selector(self.hass),
                 vol.Optional(CONF_REMINDER_TIME): selector.TimeSelector(),
                 vol.Optional(CONF_WEATHER_ENTITY): selector.EntitySelector(
                     selector.EntitySelectorConfig(domain="weather")

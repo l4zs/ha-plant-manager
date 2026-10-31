@@ -28,7 +28,7 @@ from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_change, async_track_time_interval
 from homeassistant.helpers.storage import Store
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import care, vacation as trips
@@ -145,6 +145,9 @@ class PlantManager:
         self._tracking = False
         self._prepare_note: str | None = None
         self._backups: dict[str, tuple[str, datetime]] = {}
+        # Per Home Assistant user: which phones get what (see notification_settings).
+        self._notify_store: Store[dict[str, Any]] = Store(hass, 1, f"{DOMAIN}.notifications")
+        self.notify_users: dict[str, dict[str, Any]] = {}
         self._unsubs: list[CALLBACK_TYPE] = []
 
     # -- lifecycle ---------------------------------------------------------
@@ -159,7 +162,12 @@ class PlantManager:
         await self._run(self._setup_files)
         stored = await self._alert_store.async_load() or {}
         self._announced = set(stored.get("announced", []))
+        self.notify_users = (await self._notify_store.async_load() or {}).get("users", {})
         self._unsubs.append(async_track_time_interval(self.hass, self._async_tick, TICK_INTERVAL))
+        # Everyone picks their own time for the daily summary.
+        self._unsubs.append(
+            async_track_time_change(self.hass, self._async_user_reminders, second=0)
+        )
         if reminder := dt_util.parse_time(self.options[CONF_REMINDER_TIME] or ""):
             self._unsubs.append(
                 async_track_time_change(
@@ -546,7 +554,7 @@ class PlantManager:
                     title=NAME,
                     notification_id=f"{DOMAIN}_alert_{alert['key']}",
                 )
-            if service := (self.options[CONF_NOTIFY_SERVICE] or "").strip():
+            for service in self._targets(problems=True):
                 self.hass.async_create_task(self._async_notify(service, alert["message"]))
         for key in resolved:
             self.hass.bus.async_fire(EVENT_ALERT_CLEARED, {"key": key})
@@ -579,42 +587,138 @@ class PlantManager:
         except Exception:
             _LOGGER.warning("Could not send the notification with %s", service, exc_info=True)
 
-    async def _async_reminder_job(self, _now: datetime) -> None:
-        await self.async_send_reminder()
+    # -- reminders ---------------------------------------------------------
 
-    async def async_send_reminder(self, *, force: bool = False) -> bool:
-        """Send today's care summary to the notify action. Returns whether it was sent.
+    def _user_targets(self) -> set[str]:
+        return {t for settings in self.notify_users.values() for t in settings["targets"]}
 
-        While you are away, it goes to the plant sitter instead (or to you if the
-        sitter has no notify action), on the days the plan has a visit.
+    def _targets(self, *, problems: bool = False, daily: bool = False) -> set[str]:
+        """Notify actions that get problems or the daily summary.
+
+        The integration's notify action, unless a user picked that phone in the panel
+        (then their own settings decide), plus every user's phones that want it.
         """
-        own = (self.options[CONF_NOTIFY_SERVICE] or "").strip()
-        if self.away and self.vacation and self.trip:
-            if not (service := (self.vacation.get("sitter_notify") or "").strip() or own):
-                return False
-            today = dt_util.now().date().isoformat()
-            visit = next((v for v in self.trip["visits"] if v["date"] == today), None)
-            if visit is None and not force:
-                return False
-            message = (
-                "🪴 Please water today: " + ", ".join(self.label(p) for p in visit["plant_ids"])
-                if visit
-                else "Nothing to water today 🌿"
-            )
-            await self._async_notify(service, message, title="Plant care")
-            return True
-        if not own:
-            return False
+        targets = set()
+        if own := (self.options[CONF_NOTIFY_SERVICE] or "").strip():
+            targets.add(own)
+        targets -= self._user_targets()
+        for settings in self.notify_users.values():
+            if (problems and settings["problems"]) or (daily and settings["daily"]):
+                targets.update(settings["targets"])
+        return targets
+
+    def _visit_today(self) -> dict[str, Any] | None:
+        if not (self.away and self.trip):
+            return None
+        today = dt_util.now().date().isoformat()
+        return next((v for v in self.trip["visits"] if v["date"] == today), None)
+
+    def _daily_message(self, *, force: bool = False) -> str:
+        """Today's summary for the plants' owners."""
+        if self.away and self.vacation:
+            if visit := self._visit_today():
+                names = ", ".join(self.label(p) for p in visit["plant_ids"])
+                if self.vacation.get("sitter_notify"):
+                    sitter = self.vacation.get("sitter") or "The plant sitter"
+                    return f"🧳 {sitter} waters today: {names}"
+                return f"🪴 Please water today: {names}"
+            return "Nothing to water today 🌿" if force else ""
         lines = [summary_message(self.plants, self.status)]
         if self.trip:
             leave = dt_util.as_local(datetime.fromisoformat(self.trip["leave"])).date()
             if leave == dt_util.now().date() + timedelta(days=1):
                 lines.append("🧳 Leaving tomorrow:\n" + self._prepare_message())
         message = "\n".join(line for line in lines if line)
-        if not message and not force:
+        return message or ("All plants are happy 🌿" if force else "")
+
+    async def _async_send_daily(self, targets: set[str], *, force: bool = False) -> bool:
+        if not targets or not (message := self._daily_message(force=force)):
             return False
-        await self._async_notify(own, message or "All plants are happy 🌿")
+        title = "Plant care" if self.away else NAME
+        for service in sorted(targets):
+            await self._async_notify(service, message, title=title)
         return True
+
+    async def _async_sitter_reminder(self, *, force: bool = False) -> bool:
+        """While away, tell the plant sitter what to water today."""
+        if not (self.away and self.vacation):
+            return False
+        if not (service := (self.vacation.get("sitter_notify") or "").strip()):
+            return False
+        visit = self._visit_today()
+        if visit is None and not force:
+            return False
+        message = (
+            "🪴 Please water today: " + ", ".join(self.label(p) for p in visit["plant_ids"])
+            if visit
+            else "Nothing to water today 🌿"
+        )
+        await self._async_notify(service, message, title="Plant care")
+        return True
+
+    async def _async_reminder_job(self, _now: datetime) -> None:
+        """At the integration's reminder time: the sitter and the notify action."""
+        await self._async_sitter_reminder()
+        await self._async_send_daily(self._targets())
+
+    async def _async_user_reminders(self, now: datetime) -> None:
+        """Every minute: the daily summary for users whose time it is."""
+        minute = dt_util.as_local(now).strftime("%H:%M")
+        for settings in self.notify_users.values():
+            if settings["daily"] and settings["targets"] and settings["time"][:5] == minute:
+                await self._async_send_daily(set(settings["targets"]))
+
+    async def async_send_reminder(self, *, force: bool = False) -> bool:
+        """Send today's care summary now to everyone. Returns whether anything was sent."""
+        sitter = await self._async_sitter_reminder(force=force)
+        owners = await self._async_send_daily(self._targets(daily=True), force=force)
+        return sitter or owners
+
+    # -- notification settings per user ------------------------------------
+
+    def phones(self, user_id: str | None = None) -> list[dict[str, Any]]:
+        """Phones with the Home Assistant app that can get notifications, the user's first."""
+        phones = []
+        for entry in self.hass.config_entries.async_entries("mobile_app"):
+            if not (device := entry.data.get("device_name")):
+                continue
+            name = f"mobile_app_{slugify(device)}"
+            if self.hass.services.has_service("notify", name):
+                phones.append(
+                    {
+                        "service": f"notify.{name}",
+                        "name": device,
+                        "mine": bool(user_id) and entry.data.get("user_id") == user_id,
+                    }
+                )
+        return sorted(phones, key=lambda p: (not p["mine"], p["name"].lower()))
+
+    def notification_settings(self, user_id: str) -> dict[str, Any]:
+        """A user's settings; new users get the summary at the integration's time."""
+        default_time = (self.options[CONF_REMINDER_TIME] or "09:00")[:5]
+        defaults = {"targets": [], "daily": True, "time": default_time, "problems": True}
+        return {**defaults, **self.notify_users.get(user_id, {})}
+
+    async def async_set_notifications(self, user_id: str, settings: dict[str, Any]) -> None:
+        """Save which phones of a user get what."""
+        for service in settings["targets"]:
+            self._check_notify(service)
+        if dt_util.parse_time(settings["time"]) is None:
+            raise ValueError(f"Invalid time {settings['time']}")
+        if settings["targets"]:
+            self.notify_users[user_id] = {**self.notification_settings(user_id), **settings}
+        else:
+            self.notify_users.pop(user_id, None)
+        await self._notify_store.async_save({"users": self.notify_users})
+
+    async def async_test_notification(self, user_id: str) -> int:
+        """Send a test to a user's phones. Returns how many."""
+        targets = self.notification_settings(user_id)["targets"]
+        for service in targets:
+            await self._async_notify(
+                service, "🌿 Plant Manager notifications work on this phone.", title=NAME
+            )
+        return len(targets)
 
     # -- plants ------------------------------------------------------------
 

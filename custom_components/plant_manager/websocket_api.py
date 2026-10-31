@@ -123,6 +123,9 @@ def async_register(hass: HomeAssistant) -> None:
         ws_export_json,
         ws_export_csv,
         ws_backup_create,
+        ws_notifications_get,
+        ws_notifications_set,
+        ws_notifications_test,
     ):
         websocket_api.async_register_command(hass, command)
 
@@ -505,3 +508,49 @@ async def ws_backup_create(hass, connection, msg, manager: PlantManager) -> None
         refresh_token_id=connection.refresh_token_id,
     )
     connection.send_result(msg["id"], {"url": url})
+
+
+# -- notifications (per user) --------------------------------------------
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/notifications/get"})
+@websocket_api.async_response
+@_with_manager
+async def ws_notifications_get(hass, connection, msg, manager: PlantManager) -> None:
+    """The current user's notification settings and the phones to choose from."""
+    user_id = connection.user.id
+    connection.send_result(
+        msg["id"],
+        {
+            "settings": manager.notification_settings(user_id),
+            "phones": manager.phones(user_id),
+        },
+    )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/notifications/set",
+        vol.Required("targets"): [cv.string],
+        vol.Required("daily"): bool,
+        vol.Required("time"): cv.string,
+        vol.Required("problems"): bool,
+    }
+)
+@websocket_api.async_response
+@_with_manager
+async def ws_notifications_set(hass, connection, msg, manager: PlantManager) -> None:
+    """Save the current user's notification settings."""
+    settings = {key: msg[key] for key in ("targets", "daily", "time", "problems")}
+    await manager.async_set_notifications(connection.user.id, settings)
+    connection.send_result(msg["id"], manager.notification_settings(connection.user.id))
+
+
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/notifications/test"})
+@websocket_api.async_response
+@_with_manager
+async def ws_notifications_test(hass, connection, msg, manager: PlantManager) -> None:
+    """Send a test notification to the current user's phones."""
+    connection.send_result(
+        msg["id"], {"sent": await manager.async_test_notification(connection.user.id)}
+    )

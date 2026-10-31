@@ -181,6 +181,28 @@ with sync_playwright() as p:
     page.wait_for_timeout(500)
     page.screenshot(path=f"{OUT}/08-card.png")
 
+    step("card editor")
+    page.goto(BASE + "/dashboard-plants/0?edit=1")
+    try:
+        page.get_by_text("Add card").first.click(timeout=30000)
+        page.get_by_text("By card", exact=True).first.click(timeout=15000)
+        page.get_by_placeholder("Search cards").first.fill("Plant Manager", timeout=15000)
+        page.get_by_text("Plant Manager", exact=True).first.click(timeout=15000, force=True)
+        page.get_by_text("Show counts (plants, need water, problems)").first.wait_for(
+            timeout=15000
+        )
+    finally:
+        page.screenshot(path=f"{OUT}/14-card-editor.png")
+    page.keyboard.press("Escape")
+
+    step("my notifications")
+    page.goto(BASE + "/plant-manager/plants")
+    panel.locator('[data-action="open-notify"]').click(timeout=30000)
+    panel.locator("text=No phones yet").wait_for(timeout=10000)
+    panel.locator("text=Daily summary").wait_for(timeout=10000)
+    page.screenshot(path=f"{OUT}/15-notifications.png")
+    panel.locator('[data-action="close-notify"]').click()
+
     step("restore backup")
     page.goto(BASE + "/plant-manager/plants")
     panel.locator(".plant-card", has_text="Pothos").wait_for(timeout=30000)

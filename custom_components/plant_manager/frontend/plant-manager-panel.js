@@ -468,9 +468,11 @@ class PlantManagerPanel extends HTMLElement {
           ${this._narrow ? `<button class="menu" data-action="menu" title="Menu">☰</button>` : ""}
           <h1>Plants</h1>
           <div class="tabs" id="tabs"></div>
+          <button class="menu" data-action="open-notify" title="My notifications" style="margin-left:auto">🔔</button>
         </div>
         <main id="main"></main>
         <div id="editor"></div>
+        <div id="notify"></div>
         <div id="toast"></div>
       </div>`;
     this._renderTabs();
@@ -1004,6 +1006,83 @@ class PlantManagerPanel extends HTMLElement {
     }
     win.document.write(html);
     win.document.close();
+  }
+
+  // -- my notifications --------------------------------------------------
+
+  async _openNotify() {
+    try {
+      const data = await this._ws("notifications/get");
+      this._notify = { phones: data.phones, draft: { ...data.settings, targets: [...data.settings.targets] } };
+    } catch (err) {
+      this._toast(err.message);
+      return;
+    }
+    this._renderNotify();
+  }
+
+  _closeNotify() {
+    this._notify = null;
+    const root = this.shadowRoot.getElementById("notify");
+    if (root) root.innerHTML = "";
+  }
+
+  _renderNotify() {
+    const root = this.shadowRoot.getElementById("notify");
+    if (!root || !this._notify) return;
+    const { phones, draft } = this._notify;
+    // Phones that were picked but are gone (app removed) stay visible so they can be unticked.
+    const known = new Set(phones.map((p) => p.service));
+    const all = [...phones, ...draft.targets.filter((t) => !known.has(t)).map((t) => ({ service: t, name: t, mine: true }))];
+    const user = this._hass.user?.name;
+    root.innerHTML = `
+      <div class="overlay" data-action="notify-overlay">
+        <div class="dialog" style="max-width:560px">
+          <div class="dialog-head">
+            <button class="btn" data-action="close-notify">✕</button>
+            <h2>My notifications</h2>
+            <button class="btn primary" data-action="save-notify">Save</button>
+          </div>
+          <div class="dialog-body">
+            <div class="section">
+              <h2>Send to</h2>
+              ${
+                all.length
+                  ? all
+                      .map(
+                        (p) => `<label class="field check"><input type="checkbox" data-notify-target="${esc(p.service)}" ${draft.targets.includes(p.service) ? "checked" : ""}>
+                          📱 ${esc(p.name)}${p.mine ? "" : ` <span class="muted">(someone else's)</span>`}</label>`
+                      )
+                      .join("")
+                  : `<p class="muted" style="margin-top:0">No phones yet. Install the Home Assistant app on your phone and log in to this Home Assistant; the phone then shows up here.</p>`
+              }
+            </div>
+            <div class="section">
+              <h2>What</h2>
+              <label class="field check"><input type="checkbox" data-notify="daily" ${draft.daily ? "checked" : ""}> Daily summary: what to water and fertilize</label>
+              <label class="field" style="max-width:220px;margin:4px 0 12px 28px">At <input type="time" data-notify="time" value="${esc(draft.time.slice(0, 5))}"></label>
+              <label class="field check"><input type="checkbox" data-notify="problems" ${draft.problems ? "checked" : ""}> Problems right away (too cold, too dark, soil too wet, …)</label>
+              <p class="hint">The summary is only sent on days with something to do; while you are on vacation it says what the plant
+                sitter waters. These settings are only for you${user ? ` (${esc(user)})` : ""}; everyone can choose their own.</p>
+              <div class="actions-bar" style="margin-top:12px">
+                <button class="btn" data-action="test-notify" ${draft.targets.length ? "" : "disabled"}>Save and send a test</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async _saveNotify() {
+    const { draft } = this._notify;
+    const saved = await this._ws("notifications/set", {
+      targets: draft.targets,
+      daily: draft.daily,
+      time: draft.time,
+      problems: draft.problems,
+    });
+    this._notify.draft = { ...saved, targets: [...saved.targets] };
+    return saved;
   }
 
   // -- editor ------------------------------------------------------------
@@ -1706,6 +1785,26 @@ class PlantManagerPanel extends HTMLElement {
         await this._run(this._ws("photos/reorder", { plant_id: editor.id, photo_ids: order }));
         break;
       }
+      case "open-notify":
+        this._openNotify();
+        break;
+      case "notify-overlay":
+        if (ev.target === el) this._closeNotify();
+        break;
+      case "close-notify":
+        this._closeNotify();
+        break;
+      case "save-notify":
+        if (await this._run(this._saveNotify(), "Notifications saved")) this._closeNotify();
+        break;
+      case "test-notify": {
+        const saved = await this._run(this._saveNotify());
+        if (!saved) break;
+        const result = await this._run(this._ws("notifications/test"));
+        if (result) this._toast(`Test sent to ${result.sent} phone${result.sent === 1 ? "" : "s"}`);
+        this._renderNotify();
+        break;
+      }
       case "toggle-data":
         this._showData = !this._showData;
         this._renderMain();
@@ -1826,6 +1925,13 @@ class PlantManagerPanel extends HTMLElement {
     if (el.dataset.filter && el.dataset.filter !== "q") {
       this._filter[el.dataset.filter] = el.value;
       this._renderMain();
+    } else if (el.dataset.notifyTarget !== undefined && this._notify) {
+      const targets = this._notify.draft.targets.filter((t) => t !== el.dataset.notifyTarget);
+      if (el.checked) targets.push(el.dataset.notifyTarget);
+      this._notify.draft.targets = targets;
+      this._renderNotify();
+    } else if (el.dataset.notify && this._notify) {
+      this._notify.draft[el.dataset.notify] = el.type === "checkbox" ? el.checked : el.value;
     } else if (el.dataset.trip && this._tripDraft) {
       this._tripDraft[el.dataset.trip] = el.value;
       if (el.type === "date") {

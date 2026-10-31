@@ -61,10 +61,20 @@ Open the Plants panel and choose **+ Add plant**:
   it learned), its care log (repotted, pruned, misted, notes), and its photos.
 
 ### Reminders
+**On your phone:** install the Home Assistant app and log in, then open the Plants panel, tap
+**🔔**, tick your phone, and choose:
+- a **daily summary** of what to water and fertilize, at your own time (only on days with something
+  to do; while on vacation it says what the plant sitter waters),
+- **problems right away** (too cold, too dark, soil too wet, ...).
+
+**Save and send a test** checks that it arrives. These settings are per Home Assistant user, so
+everyone in the household picks their own phones and time.
+
 Under **Configure → Reminders and weather**:
 - Home Assistant notifications for plants that need water or fertilizer, and for problems.
-- A notify action (e.g. `notify.mobile_app_my_phone`): problems right away, and a daily summary at
-  the reminder time (default 09:00).
+- **Send to phone**: a phone (picked by name) or any notify action that gets problems and the daily
+  summary at the reminder time (default 09:00) for everyone. A phone that a user picked under
+  **🔔** follows that user's settings instead, so it isn't notified twice.
 - A weather entity: outdoor plants without their own sensors use its temperature and humidity, and
   rain counts as watering for plants that get rain.
 
@@ -109,7 +119,8 @@ On the **Plants** tab, under **Import / export**:
 Home Assistant's own backups include `/config/plant_manager/` as well.
 
 ### Lovelace card
-The card is registered automatically. Add it to a dashboard:
+The card is registered automatically. Edit a dashboard, **Add card**, switch to **By card**, and
+pick **Plant Manager**; the title and the counts can be changed in the visual editor. In YAML:
 
 ```yaml
 type: custom:plant-manager-card

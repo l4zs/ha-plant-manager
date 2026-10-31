@@ -38,13 +38,13 @@
         "title": "Reminders and weather",
         "data": {
           "notify_alerts": "Show Home Assistant notifications",
-          "notify_service": "Notify action",
+          "notify_service": "Send to phone",
           "reminder_time": "Daily reminder at",
           "weather_entity": "Weather entity"
         },
         "data_description": {
           "notify_alerts": "Notifications for plants that need water or fertilizer, and for problems (too cold, too dark, ...).",
-          "notify_service": "Also send to a phone, e.g. notify.mobile_app_my_phone: problems right away, and a daily summary of what to water and fertilize.",
+          "notify_service": "A phone with the Home Assistant app (or another notify action) for everyone: problems right away, and a daily summary of what to water and fertilize. Each person can also choose their own phones and time with the 🔔 button in the Plants panel.",
           "reminder_time": "When the daily summary is sent.",
           "weather_entity": "Outdoor plants without their own sensors use its temperature and humidity; rain counts as watering for uncovered plants."
         }
