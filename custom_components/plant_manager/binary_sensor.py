@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .care import PROBLEM_TEXT
 from .entity import PlantEntity, PlantManagerEntity, async_track_plants
+from .i18n import tr
 from .manager import PlantManager
 
 
@@ -62,7 +63,9 @@ class ProblemSensor(PlantEntity, BinarySensorEntity):
             return None
         return {
             "problems": care["problems"],
-            "messages": [PROBLEM_TEXT[code] for code in care["problems"]],
+            "messages": [
+                tr(self._manager.language, PROBLEM_TEXT[code]) for code in care["problems"]
+            ],
             "temperature": care["temperature"],
             "humidity": care["humidity"],
             "soil_moisture": care["moisture"],

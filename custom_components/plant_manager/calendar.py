@@ -11,9 +11,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .entity import PlantManagerEntity
+from .i18n import tr
 from .manager import PlantManager
 
-ICONS = {
+SUMMARIES = {
     "water": "💧 Water",
     "fertilize": "🌱 Fertilize",
     "prepare": "🧳 Water before leaving:",
@@ -43,6 +44,7 @@ class PlantCareCalendar(PlantManagerEntity, CalendarEntity):
 
     def _events(self, start: datetime, end: datetime) -> list[CalendarEvent]:
         events = []
+        lang = self._manager.language
         for item in self._manager.schedule(start, end):
             day = _day(item["at"])
             if item["kind"] == "vacation":
@@ -50,7 +52,7 @@ class PlantCareCalendar(PlantManagerEntity, CalendarEntity):
                     CalendarEvent(
                         start=day,
                         end=_day(item["end"]) + timedelta(days=1),
-                        summary="🧳 Vacation",
+                        summary=tr(lang, "🧳 Vacation"),
                         uid=f"vacation_{day.isoformat()}",
                     )
                 )
@@ -59,7 +61,7 @@ class PlantCareCalendar(PlantManagerEntity, CalendarEntity):
                 CalendarEvent(
                     start=day,
                     end=day + timedelta(days=1),
-                    summary=f"{ICONS[item['kind']]} {item['name']}",
+                    summary=f"{tr(lang, SUMMARIES[item['kind']])} {item['name']}",
                     uid=f"{item['plant_id']}_{item['kind']}_{day.isoformat()}",
                 )
             )

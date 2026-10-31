@@ -15,7 +15,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 import voluptuous as vol
 
-from . import species_db
+from . import i18n, species_db
+from .alerts import alert_message
 from .care import PROBLEM_TEXT
 from .const import (
     BACKUP_URL,
@@ -47,6 +48,12 @@ from .vacation import TIP_TEXT
 
 PHOTO_URL_LIFETIME = timedelta(days=1)
 
+
+def _command(schema: dict[Any, Any]) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """A websocket command. Every command takes the UI's ``language`` for the texts it returns."""
+    return websocket_api.websocket_command({**schema, vol.Optional("language"): cv.string})
+
+
 Handler = Callable[
     [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any], PlantManager],
     Awaitable[None],
@@ -60,15 +67,19 @@ def _with_manager(func: Handler) -> Callable[..., Awaitable[None]]:
     async def wrapper(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
     ) -> None:
+        lang = msg["lang"] = i18n.language(msg.get("language") or hass.config.language)
         if (manager := get_manager(hass)) is None:
-            connection.send_error(msg["id"], "not_loaded", "Plant Manager is not loaded")
+            message = i18n.tr(lang, "Plant Manager is not loaded")
+            connection.send_error(msg["id"], "not_loaded", message)
             return
         try:
             await func(hass, connection, msg, manager)
         except NotFoundError as err:
-            connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, str(err))
+            message = i18n.translate_message(lang, str(err))
+            connection.send_error(msg["id"], websocket_api.ERR_NOT_FOUND, message)
         except ValueError as err:
-            connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+            message = i18n.translate_message(lang, str(err))
+            connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, message)
 
     return wrapper
 
@@ -133,11 +144,12 @@ def async_register(hass: HomeAssistant) -> None:
 # -- general -------------------------------------------------------------
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/config"})
+@_command({vol.Required("type"): f"{DOMAIN}/config"})
 @websocket_api.async_response
 @_with_manager
 async def ws_config(hass, connection, msg, manager: PlantManager) -> None:
     """Return the static vocabulary and options the UI needs."""
+    lang = msg["lang"]
     connection.send_result(
         msg["id"],
         {
@@ -148,16 +160,16 @@ async def ws_config(hass, connection, msg, manager: PlantManager) -> None:
             "sensor_fields": SENSOR_FIELDS,
             "care_kinds": CARE_KINDS,
             "feedback": FEEDBACK,
-            "problems": PROBLEM_TEXT,
-            "species": species_db.species_options(),
+            "problems": {code: i18n.tr(lang, text) for code, text in PROBLEM_TEXT.items()},
+            "species": species_db.species_options(lang),
             "identification": manager.options[CONF_ID_PROVIDER] != PROVIDER_NONE,
             "provider": manager.options[CONF_ID_PROVIDER],
-            "vacation_tips": TIP_TEXT,
+            "vacation_tips": {code: i18n.tr(lang, text) for code, text in TIP_TEXT.items()},
         },
     )
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/summary"})
+@_command({vol.Required("type"): f"{DOMAIN}/summary"})
 @websocket_api.async_response
 @_with_manager
 async def ws_summary(hass, connection, msg, manager: PlantManager) -> None:
@@ -183,7 +195,7 @@ async def ws_summary(hass, connection, msg, manager: PlantManager) -> None:
     )
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/subscribe"})
+@_command({vol.Required("type"): f"{DOMAIN}/subscribe"})
 @callback
 def ws_subscribe(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
@@ -200,17 +212,16 @@ def ws_subscribe(
     connection.send_result(msg["id"])
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/alerts"})
+@_command({vol.Required("type"): f"{DOMAIN}/alerts"})
 @websocket_api.async_response
 @_with_manager
 async def ws_alerts(hass, connection, msg, manager: PlantManager) -> None:
     """Return the active alerts."""
-    connection.send_result(msg["id"], manager.alerts)
+    alerts = [{**alert, "message": alert_message(alert, msg["lang"])} for alert in manager.alerts]
+    connection.send_result(msg["id"], alerts)
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): f"{DOMAIN}/schedule", vol.Optional("days", default=28): int}
-)
+@_command({vol.Required("type"): f"{DOMAIN}/schedule", vol.Optional("days", default=28): int})
 @websocket_api.async_response
 @_with_manager
 async def ws_schedule(hass, connection, msg, manager: PlantManager) -> None:
@@ -224,7 +235,7 @@ async def ws_schedule(hass, connection, msg, manager: PlantManager) -> None:
 # -- plants --------------------------------------------------------------
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/plants/list"})
+@_command({vol.Required("type"): f"{DOMAIN}/plants/list"})
 @websocket_api.async_response
 @_with_manager
 async def ws_plants_list(hass, connection, msg, manager: PlantManager) -> None:
@@ -235,9 +246,7 @@ async def ws_plants_list(hass, connection, msg, manager: PlantManager) -> None:
     )
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): f"{DOMAIN}/plants/get", vol.Required("plant_id"): str}
-)
+@_command({vol.Required("type"): f"{DOMAIN}/plants/get", vol.Required("plant_id"): str})
 @websocket_api.async_response
 @_with_manager
 async def ws_plants_get(hass, connection, msg, manager: PlantManager) -> None:
@@ -246,18 +255,18 @@ async def ws_plants_get(hass, connection, msg, manager: PlantManager) -> None:
     connection.send_result(msg["id"], _signed(hass, connection, plant))
 
 
-@websocket_api.websocket_command(
+@_command(
     {vol.Required("type"): f"{DOMAIN}/plants/create", vol.Required("plant"): PLANT_CREATE_SCHEMA}
 )
 @websocket_api.async_response
 @_with_manager
 async def ws_plants_create(hass, connection, msg, manager: PlantManager) -> None:
     """Create a plant."""
-    plant = await manager.async_create_plant(normalize_plant(msg["plant"]))
+    plant = await manager.async_create_plant(normalize_plant(msg["plant"]), msg["lang"])
     connection.send_result(msg["id"], _signed(hass, connection, plant))
 
 
-@websocket_api.websocket_command(
+@_command(
     {
         vol.Required("type"): f"{DOMAIN}/plants/update",
         vol.Required("plant_id"): str,
@@ -272,9 +281,7 @@ async def ws_plants_update(hass, connection, msg, manager: PlantManager) -> None
     connection.send_result(msg["id"], _signed(hass, connection, plant))
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): f"{DOMAIN}/plants/delete", vol.Required("plant_id"): str}
-)
+@_command({vol.Required("type"): f"{DOMAIN}/plants/delete", vol.Required("plant_id"): str})
 @websocket_api.async_response
 @_with_manager
 async def ws_plants_delete(hass, connection, msg, manager: PlantManager) -> None:
@@ -290,7 +297,7 @@ def _event_result(event: dict[str, Any]) -> dict[str, Any]:
     return {"event_id": event["id"], "undo_id": event["id"], "kind": event["kind"]}
 
 
-@websocket_api.websocket_command(
+@_command(
     {
         vol.Required("type"): f"{DOMAIN}/plants/water",
         vol.Required("plant_id"): str,
@@ -306,9 +313,7 @@ async def ws_plants_water(hass, connection, msg, manager: PlantManager) -> None:
     connection.send_result(msg["id"], _event_result(event))
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): f"{DOMAIN}/plants/snooze", vol.Required("plant_id"): str}
-)
+@_command({vol.Required("type"): f"{DOMAIN}/plants/snooze", vol.Required("plant_id"): str})
 @websocket_api.async_response
 @_with_manager
 async def ws_plants_snooze(hass, connection, msg, manager: PlantManager) -> None:
@@ -317,7 +322,7 @@ async def ws_plants_snooze(hass, connection, msg, manager: PlantManager) -> None
     connection.send_result(msg["id"], _event_result(event))
 
 
-@websocket_api.websocket_command(
+@_command(
     {
         vol.Required("type"): f"{DOMAIN}/plants/log",
         vol.Required("plant_id"): str,
@@ -334,9 +339,7 @@ async def ws_plants_log(hass, connection, msg, manager: PlantManager) -> None:
     connection.send_result(msg["id"], _event_result(event))
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): f"{DOMAIN}/events/delete", vol.Required("event_id"): int}
-)
+@_command({vol.Required("type"): f"{DOMAIN}/events/delete", vol.Required("event_id"): int})
 @websocket_api.async_response
 @_with_manager
 async def ws_events_delete(hass, connection, msg, manager: PlantManager) -> None:
@@ -345,9 +348,7 @@ async def ws_events_delete(hass, connection, msg, manager: PlantManager) -> None
     connection.send_result(msg["id"])
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): f"{DOMAIN}/undo", vol.Required("undo_id"): int}
-)
+@_command({vol.Required("type"): f"{DOMAIN}/undo", vol.Required("undo_id"): int})
 @websocket_api.async_response
 @_with_manager
 async def ws_undo(hass, connection, msg, manager: PlantManager) -> None:
@@ -355,7 +356,7 @@ async def ws_undo(hass, connection, msg, manager: PlantManager) -> None:
     connection.send_result(msg["id"], {"undone": await manager.async_undo(msg["undo_id"])})
 
 
-@websocket_api.websocket_command(
+@_command(
     {
         vol.Required("type"): f"{DOMAIN}/profile/resolve",
         vol.Required("species"): vol.All(str, vol.Strip, vol.Length(min=1, max=200)),
@@ -367,14 +368,15 @@ async def ws_undo(hass, connection, msg, manager: PlantManager) -> None:
 async def ws_profile_resolve(hass, connection, msg, manager: PlantManager) -> None:
     """Look up the care profile for a species."""
     connection.send_result(
-        msg["id"], await manager.async_resolve_profile(msg["species"], msg.get("family"))
+        msg["id"],
+        await manager.async_resolve_profile(msg["species"], msg.get("family"), msg["lang"]),
     )
 
 
 # -- photos --------------------------------------------------------------
 
 
-@websocket_api.websocket_command(
+@_command(
     {
         vol.Required("type"): f"{DOMAIN}/photos/attach_staged",
         vol.Required("plant_id"): str,
@@ -389,9 +391,7 @@ async def ws_photos_attach_staged(hass, connection, msg, manager: PlantManager) 
     connection.send_result(msg["id"], {"id": photo["id"]})
 
 
-@websocket_api.websocket_command(
-    {vol.Required("type"): f"{DOMAIN}/photos/delete", vol.Required("photo_id"): str}
-)
+@_command({vol.Required("type"): f"{DOMAIN}/photos/delete", vol.Required("photo_id"): str})
 @websocket_api.async_response
 @_with_manager
 async def ws_photos_delete(hass, connection, msg, manager: PlantManager) -> None:
@@ -400,7 +400,7 @@ async def ws_photos_delete(hass, connection, msg, manager: PlantManager) -> None
     connection.send_result(msg["id"])
 
 
-@websocket_api.websocket_command(
+@_command(
     {
         vol.Required("type"): f"{DOMAIN}/photos/reorder",
         vol.Required("plant_id"): str,
@@ -418,15 +418,15 @@ async def ws_photos_reorder(hass, connection, msg, manager: PlantManager) -> Non
 # -- vacation ------------------------------------------------------------
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/vacation/get"})
+@_command({vol.Required("type"): f"{DOMAIN}/vacation/get"})
 @websocket_api.async_response
 @_with_manager
 async def ws_vacation_get(hass, connection, msg, manager: PlantManager) -> None:
     """Return the planned or ongoing vacation with its plan."""
-    connection.send_result(msg["id"], manager.vacation_view())
+    connection.send_result(msg["id"], manager.vacation_view(lang=msg["lang"]))
 
 
-@websocket_api.websocket_command(
+@_command(
     {
         vol.Required("type"): f"{DOMAIN}/vacation/preview",
         vol.Required("start_date"): cv.date,
@@ -441,23 +441,25 @@ async def ws_vacation_preview(hass, connection, msg, manager: PlantManager) -> N
     connection.send_result(
         msg["id"],
         manager.preview_vacation(
-            date.fromisoformat(dates["start_date"]), date.fromisoformat(dates["end_date"])
+            date.fromisoformat(dates["start_date"]),
+            date.fromisoformat(dates["end_date"]),
+            msg["lang"],
         ),
     )
 
 
-@websocket_api.websocket_command(
+@_command(
     {vol.Required("type"): f"{DOMAIN}/vacation/set", vol.Required("vacation"): VACATION_SCHEMA}
 )
 @websocket_api.async_response
 @_with_manager
 async def ws_vacation_set(hass, connection, msg, manager: PlantManager) -> None:
     """Plan a vacation, or change the current one."""
-    result = await manager.async_set_vacation(normalize_vacation(msg["vacation"]))
+    result = await manager.async_set_vacation(normalize_vacation(msg["vacation"]), msg["lang"])
     connection.send_result(msg["id"], result)
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/vacation/end"})
+@_command({vol.Required("type"): f"{DOMAIN}/vacation/end"})
 @websocket_api.async_response
 @_with_manager
 async def ws_vacation_end(hass, connection, msg, manager: PlantManager) -> None:
@@ -466,19 +468,19 @@ async def ws_vacation_end(hass, connection, msg, manager: PlantManager) -> None:
     connection.send_result(msg["id"])
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/vacation/send_plan"})
+@_command({vol.Required("type"): f"{DOMAIN}/vacation/send_plan"})
 @websocket_api.async_response
 @_with_manager
 async def ws_vacation_send_plan(hass, connection, msg, manager: PlantManager) -> None:
     """Send the plan to the plant sitter."""
-    await manager.async_send_plan()
+    await manager.async_send_plan(msg["lang"])
     connection.send_result(msg["id"])
 
 
 # -- export & backup -----------------------------------------------------
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/export/json"})
+@_command({vol.Required("type"): f"{DOMAIN}/export/json"})
 @websocket_api.async_response
 @_with_manager
 async def ws_export_json(hass, connection, msg, manager: PlantManager) -> None:
@@ -486,7 +488,7 @@ async def ws_export_json(hass, connection, msg, manager: PlantManager) -> None:
     connection.send_result(msg["id"], await manager.async_export_json())
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/export/csv"})
+@_command({vol.Required("type"): f"{DOMAIN}/export/csv"})
 @websocket_api.async_response
 @_with_manager
 async def ws_export_csv(hass, connection, msg, manager: PlantManager) -> None:
@@ -494,7 +496,7 @@ async def ws_export_csv(hass, connection, msg, manager: PlantManager) -> None:
     connection.send_result(msg["id"], {"csv": await manager.async_export_csv()})
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/backup/create"})
+@_command({vol.Required("type"): f"{DOMAIN}/backup/create"})
 @websocket_api.require_admin
 @websocket_api.async_response
 @_with_manager
@@ -513,7 +515,7 @@ async def ws_backup_create(hass, connection, msg, manager: PlantManager) -> None
 # -- notifications (per user) --------------------------------------------
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/notifications/get"})
+@_command({vol.Required("type"): f"{DOMAIN}/notifications/get"})
 @websocket_api.async_response
 @_with_manager
 async def ws_notifications_get(hass, connection, msg, manager: PlantManager) -> None:
@@ -528,7 +530,7 @@ async def ws_notifications_get(hass, connection, msg, manager: PlantManager) -> 
     )
 
 
-@websocket_api.websocket_command(
+@_command(
     {
         vol.Required("type"): f"{DOMAIN}/notifications/set",
         vol.Required("targets"): [cv.string],
@@ -542,11 +544,11 @@ async def ws_notifications_get(hass, connection, msg, manager: PlantManager) -> 
 async def ws_notifications_set(hass, connection, msg, manager: PlantManager) -> None:
     """Save the current user's notification settings."""
     settings = {key: msg[key] for key in ("targets", "daily", "time", "problems")}
-    await manager.async_set_notifications(connection.user.id, settings)
+    await manager.async_set_notifications(connection.user.id, settings, msg["lang"])
     connection.send_result(msg["id"], manager.notification_settings(connection.user.id))
 
 
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/notifications/test"})
+@_command({vol.Required("type"): f"{DOMAIN}/notifications/test"})
 @websocket_api.async_response
 @_with_manager
 async def ws_notifications_test(hass, connection, msg, manager: PlantManager) -> None:

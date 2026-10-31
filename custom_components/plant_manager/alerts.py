@@ -5,14 +5,27 @@ from __future__ import annotations
 from typing import Any
 
 from .care import PROBLEM_TEXT
+from .i18n import tr
 
 KIND_WATER = "water"
 KIND_FERTILIZE = "fertilize"
 KIND_PROBLEM = "problem"
 
 
+def alert_message(alert: dict[str, Any], lang: str | None) -> str:
+    """The alert as a sentence in a language."""
+    name = alert["name"]
+    if alert["kind"] == KIND_WATER:
+        if alert["severity"] == "high":
+            return tr(lang, "{name} is overdue for water", name=name)
+        return tr(lang, "{name} needs water", name=name)
+    if alert["kind"] == KIND_FERTILIZE:
+        return tr(lang, "{name} could use fertilizer", name=name)
+    return f"{name}: " + ", ".join(tr(lang, PROBLEM_TEXT[code]) for code in alert["problems"])
+
+
 def compute_alerts(
-    plants: list[dict[str, Any]], statuses: dict[str, dict[str, Any]]
+    plants: list[dict[str, Any]], statuses: dict[str, dict[str, Any]], lang: str | None = None
 ) -> list[dict[str, Any]]:
     """Return the active alerts. Each has a stable ``key`` so it is announced once."""
     alerts: list[dict[str, Any]] = []
@@ -20,16 +33,15 @@ def compute_alerts(
         status = statuses.get(plant["id"])
         if status is None:
             continue
-        name = plant["name"]
+        base = {"plant_id": plant["id"], "name": plant["name"]}
         if status["needs_water"]:
             overdue = status["status"] == "overdue"
             alerts.append(
                 {
                     "key": f"water_{plant['id']}",
                     "kind": KIND_WATER,
-                    "plant_id": plant["id"],
+                    **base,
                     "severity": "high" if overdue else "medium",
-                    "message": f"{name} is overdue for water" if overdue else f"{name} needs water",
                 }
             )
         if status["fertilize_due"]:
@@ -37,9 +49,8 @@ def compute_alerts(
                 {
                     "key": f"fertilize_{plant['id']}",
                     "kind": KIND_FERTILIZE,
-                    "plant_id": plant["id"],
+                    **base,
                     "severity": "low",
-                    "message": f"{name} could use fertilizer",
                 }
             )
         problems = [code for code in status["problems"] if code != "watering_overdue"]
@@ -49,16 +60,19 @@ def compute_alerts(
                     # The key includes the problems, so a new problem is announced again.
                     "key": f"problem_{plant['id']}_{'_'.join(sorted(problems))}",
                     "kind": KIND_PROBLEM,
-                    "plant_id": plant["id"],
+                    **base,
                     "severity": "medium",
                     "problems": problems,
-                    "message": f"{name}: " + ", ".join(PROBLEM_TEXT[code] for code in problems),
                 }
             )
+    for alert in alerts:
+        alert["message"] = alert_message(alert, lang)
     return alerts
 
 
-def summary_message(plants: list[dict[str, Any]], statuses: dict[str, dict[str, Any]]) -> str:
+def summary_message(
+    plants: list[dict[str, Any]], statuses: dict[str, dict[str, Any]], lang: str | None = None
+) -> str:
     """The daily reminder: what needs water (today) and fertilizer."""
     water = sorted(
         plant["name"]
@@ -73,7 +87,7 @@ def summary_message(plants: list[dict[str, Any]], statuses: dict[str, dict[str, 
     )
     lines = []
     if water:
-        lines.append("💧 Water: " + ", ".join(water))
+        lines.append(tr(lang, "💧 Water: {names}", names=", ".join(water)))
     if fertilize:
-        lines.append("🌱 Fertilize: " + ", ".join(fertilize))
+        lines.append(tr(lang, "🌱 Fertilize: {names}", names=", ".join(fertilize)))
     return "\n".join(lines)

@@ -19,11 +19,21 @@ from .const import (
     UPLOAD_URL,
 )
 from .db import NotFoundError
+from .i18n import language, translate_message
 from .manager import PlantManager, get_manager
 
 
 def _manager(request: web.Request) -> PlantManager | None:
     return get_manager(request.app[KEY_HASS])
+
+
+def _language(request: web.Request) -> str:
+    """The UI's language (the panel adds it to the URL), or Home Assistant's."""
+    return language(request.query.get("language") or request.app[KEY_HASS].config.language)
+
+
+def _t(request: web.Request, message: str) -> str:
+    return translate_message(_language(request), message)
 
 
 async def _read_file(request: web.Request, limit: int) -> bytes | None:
@@ -92,19 +102,19 @@ class PhotoUploadView(HomeAssistantView):
     async def post(self, request: web.Request, plant_id: str) -> web.Response:
         """Store the uploaded image."""
         if (manager := _manager(request)) is None:
-            return self.json_message("Not loaded", HTTPStatus.SERVICE_UNAVAILABLE)
+            return self.json_message(_t(request, "Not loaded"), HTTPStatus.SERVICE_UNAVAILABLE)
         try:
             data = await _read_file(request, MAX_PHOTO_BYTES)
         except ValueError as err:
-            return self.json_message(str(err), HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+            return self.json_message(_t(request, str(err)), HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
         if data is None:
-            return self.json_message("Missing file", HTTPStatus.BAD_REQUEST)
+            return self.json_message(_t(request, "Missing file"), HTTPStatus.BAD_REQUEST)
         try:
             photo = await manager.async_add_photo(plant_id, data, "upload")
         except NotFoundError:
-            return self.json_message("Plant not found", HTTPStatus.NOT_FOUND)
+            return self.json_message(_t(request, "Plant not found"), HTTPStatus.NOT_FOUND)
         except ValueError as err:
-            return self.json_message(str(err), HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+            return self.json_message(_t(request, str(err)), HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
         return self.json({"id": photo["id"]})
 
 
@@ -118,17 +128,17 @@ class IdentifyView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Stage the photo and return the candidate species."""
         if (manager := _manager(request)) is None:
-            return self.json_message("Not loaded", HTTPStatus.SERVICE_UNAVAILABLE)
+            return self.json_message(_t(request, "Not loaded"), HTTPStatus.SERVICE_UNAVAILABLE)
         try:
             data = await _read_file(request, MAX_PHOTO_BYTES)
         except ValueError as err:
-            return self.json_message(str(err), HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+            return self.json_message(_t(request, str(err)), HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
         if data is None:
-            return self.json_message("Missing file", HTTPStatus.BAD_REQUEST)
+            return self.json_message(_t(request, "Missing file"), HTTPStatus.BAD_REQUEST)
         try:
             return self.json(await manager.async_identify(data))
         except ValueError as err:
-            return self.json_message(str(err), HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
+            return self.json_message(_t(request, str(err)), HTTPStatus.UNSUPPORTED_MEDIA_TYPE)
 
 
 class BackupView(HomeAssistantView):
@@ -165,21 +175,23 @@ class UploadView(HomeAssistantView):
     async def post(self, request: web.Request, kind: str) -> web.Response:
         """Handle the upload."""
         if (manager := _manager(request)) is None:
-            return self.json_message("Not loaded", HTTPStatus.SERVICE_UNAVAILABLE)
+            return self.json_message(_t(request, "Not loaded"), HTTPStatus.SERVICE_UNAVAILABLE)
         if kind not in ("csv", "backup"):
-            return self.json_message("Unknown upload", HTTPStatus.NOT_FOUND)
+            return self.json_message(_t(request, "Unknown upload"), HTTPStatus.NOT_FOUND)
         if kind == "backup" and not request["hass_user"].is_admin:
-            return self.json_message("Only administrators can restore", HTTPStatus.FORBIDDEN)
+            return self.json_message(
+                _t(request, "Only administrators can restore"), HTTPStatus.FORBIDDEN
+            )
         try:
             data = await _read_file(request, MAX_UPLOAD_BYTES)
         except ValueError as err:
-            return self.json_message(str(err), HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+            return self.json_message(_t(request, str(err)), HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
         if data is None:
-            return self.json_message("Missing file", HTTPStatus.BAD_REQUEST)
+            return self.json_message(_t(request, "Missing file"), HTTPStatus.BAD_REQUEST)
         try:
             if kind == "csv":
                 text = data.decode("utf-8-sig", errors="replace")
-                return self.json(await manager.async_import_csv(text))
+                return self.json(await manager.async_import_csv(text, _language(request)))
             return self.json(await manager.async_restore_backup(data))
         except ValueError as err:
-            return self.json_message(str(err), HTTPStatus.BAD_REQUEST)
+            return self.json_message(_t(request, str(err)), HTTPStatus.BAD_REQUEST)

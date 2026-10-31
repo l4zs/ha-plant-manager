@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .entity import PlantManagerEntity
+from .i18n import tr
 from .manager import PlantManager
 
 WATER = "water"
@@ -50,6 +51,7 @@ class PlantCareTodo(PlantManagerEntity, TodoListEntity):
     def todo_items(self) -> list[TodoItem]:
         """Return the due care."""
         items: list[TodoItem] = []
+        lang = self._manager.language
         for plant in self._manager.plants:
             care = self._manager.status.get(plant["id"])
             if care is None:
@@ -57,7 +59,7 @@ class PlantCareTodo(PlantManagerEntity, TodoListEntity):
             if care["needs_water"] or care["days_until_watering"] < 1:
                 items.append(
                     TodoItem(
-                        summary=f"💧 Water {plant['name']}",
+                        summary=tr(lang, "💧 Water {name}", name=plant["name"]),
                         uid=f"{plant['id']}:{WATER}",
                         status=TodoItemStatus.NEEDS_ACTION,
                         due=_day(care["next_watering"]),
@@ -66,7 +68,7 @@ class PlantCareTodo(PlantManagerEntity, TodoListEntity):
             if care["fertilize_due"]:
                 items.append(
                     TodoItem(
-                        summary=f"🌱 Fertilize {plant['name']}",
+                        summary=tr(lang, "🌱 Fertilize {name}", name=plant["name"]),
                         uid=f"{plant['id']}:{FERTILIZE}",
                         status=TodoItemStatus.NEEDS_ACTION,
                         due=_day(care["next_fertilization"]),

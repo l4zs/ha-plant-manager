@@ -26,6 +26,7 @@ from .const import (
     P_TOXIC_TO_PETS,
     P_WINTER_DORMANCY,
 )
+from .i18n import COMMON_NAMES_DE, language, tr
 
 DEFAULT_PROFILE: dict[str, Any] = {
     P_BASE_INTERVAL: 7.0,
@@ -468,6 +469,8 @@ for _entry in _ENTRIES:
     for _alias in _entry.aliases:
         _INDEX.setdefault(_norm(_alias), _entry)
     _INDEX.setdefault(_norm(_entry.common_name), _entry)
+    if _german := COMMON_NAMES_DE.get(_entry.key):
+        _INDEX.setdefault(_norm(_german), _entry)
 
 
 def lookup(name: str, family: str | None = None) -> SpeciesEntry | None:
@@ -488,12 +491,27 @@ def lookup(name: str, family: str | None = None) -> SpeciesEntry | None:
     return None
 
 
-def species_options() -> list[dict[str, str]]:
+def common_name(entry: SpeciesEntry, lang: str | None = None) -> str:
+    """The entry's common name in a language."""
+    if language(lang) == "de":
+        return COMMON_NAMES_DE.get(entry.key, entry.common_name)
+    return entry.common_name
+
+
+def profile(entry: SpeciesEntry, lang: str | None = None) -> dict[str, Any]:
+    """The entry's care profile, with its care tip in a language."""
+    result = dict(entry.profile)
+    if result.get(P_NOTES):
+        result[P_NOTES] = tr(lang, result[P_NOTES])
+    return result
+
+
+def species_options(lang: str | None = None) -> list[dict[str, str]]:
     """Return select options for the manual species picker."""
     return [
         {
             "value": entry.key.capitalize(),
-            "label": f"{entry.common_name} ({entry.key.capitalize()})",
+            "label": f"{common_name(entry, lang)} ({entry.key.capitalize()})",
         }
         for entry in _ENTRIES
     ]

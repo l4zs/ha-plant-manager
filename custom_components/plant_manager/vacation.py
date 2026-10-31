@@ -18,6 +18,7 @@ from datetime import date, datetime, time, timedelta, tzinfo
 from typing import Any
 
 from .care import compute_interval, growth_level
+from .i18n import format_day, tr
 
 LEAVE_HOUR = 8  # you leave in the morning of the first day
 BACK_HOUR = 18  # and are back in the evening of the last day
@@ -202,34 +203,38 @@ def _plan_visits(
     return [{"date": day, "plant_ids": ids} for day, ids in sorted(visits.items())]
 
 
-def _day(value: str) -> str:
-    return date.fromisoformat(value).strftime("%a %d %b").replace(" 0", " ")
-
-
 def plan_text(
     vacation: dict[str, Any],
     trip: dict[str, Any],
     label: dict[str, str],
+    lang: str | None = None,
 ) -> str:
     """The sitter's plan as plain text. ``label`` maps plant ids to "Name (Area)"."""
+
+    def day(value: str) -> str:
+        return format_day(date.fromisoformat(value[:10]), lang)
+
     leave = datetime.fromisoformat(trip["leave"]).date().isoformat()
     back = datetime.fromisoformat(trip["back"]).date().isoformat()
-    lines = [f"🪴 Plant care from {_day(leave)} to {_day(back)}"]
+    lines = [tr(lang, "🪴 Plant care from {start} to {end}", start=day(leave), end=day(back))]
     if vacation.get("sitter"):
-        lines.append(f"Thank you, {vacation['sitter']}!")
+        lines.append(tr(lang, "Thank you, {sitter}!", sitter=vacation["sitter"]))
     lines.append("")
     if trip["visits"]:
-        lines.append("Please water on these days:")
+        lines.append(tr(lang, "Please water on these days:"))
         for visit in trip["visits"]:
             names = ", ".join(label.get(pid, pid) for pid in visit["plant_ids"])
-            lines.append(f"• {_day(visit['date'])}: {names}")
+            lines.append(f"• {day(visit['date'])}: {names}")
         lines += [
             "",
-            "Water slowly until it runs out at the bottom, then empty the saucer after 15 minutes. "
-            "If the soil is still moist 2 cm deep, skip it.",
+            tr(
+                lang,
+                "Water slowly until it runs out at the bottom, then empty the saucer after "
+                "15 minutes. If the soil is still moist 2 cm deep, skip it.",
+            ),
         ]
     else:
-        lines.append("Nothing to water, all plants last until we are back.")
+        lines.append(tr(lang, "Nothing to water, all plants last until we are back."))
     if notes := (vacation.get("notes") or "").strip():
         lines += ["", notes]
     return "\n".join(lines)

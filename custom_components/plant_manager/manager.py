@@ -31,8 +31,15 @@ from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import care, vacation as trips
-from .alerts import KIND_FERTILIZE, KIND_PROBLEM, KIND_WATER, compute_alerts, summary_message
+from . import care, i18n, vacation as trips
+from .alerts import (
+    KIND_FERTILIZE,
+    KIND_PROBLEM,
+    KIND_WATER,
+    alert_message,
+    compute_alerts,
+    summary_message,
+)
 from .const import (
     CONF_ID_PROVIDER,
     CONF_NOTIFY_ALERTS,
@@ -156,6 +163,11 @@ class PlantManager:
     def options(self) -> dict[str, Any]:
         """Return the options merged with defaults."""
         return {**DEFAULT_OPTIONS, **self.entry.options}
+
+    @property
+    def language(self) -> str:
+        """Home Assistant's language: for the calendar, sitters and everything not per user."""
+        return i18n.language(self.hass.config.language)
 
     async def async_setup(self) -> None:
         """Open the database and start the schedule."""
@@ -302,7 +314,7 @@ class PlantManager:
         if self.trip is None:
             self.vacation = None
         self._track_vacation()
-        self.alerts = compute_alerts(plants, self.status)
+        self.alerts = compute_alerts(plants, self.status, self.language)
         self._announce_alerts()
         self.summary = self._summary()
         async_dispatcher_send(self.hass, SIGNAL_UPDATED)
@@ -426,25 +438,26 @@ class PlantManager:
         area = ar.async_get(self.hass).async_get_area(plant["area_id"] or "")
         return f"{plant['name']} ({area.name})" if area else plant["name"]
 
-    def vacation_view(self, plan: dict[str, Any] | None = None) -> dict[str, Any]:
-        """The vacation, its plan, and the plan as text for the sitter."""
+    def vacation_view(
+        self, plan: dict[str, Any] | None = None, lang: str | None = None
+    ) -> dict[str, Any]:
+        """The vacation, its plan, and the plan as text for the sitter (in ``lang``)."""
         vacation, trip = (self.vacation, self.trip) if plan is None else (None, plan)
+        labels = {p["id"]: self.label(p["id"]) for p in self.plants}
         return {
             "vacation": vacation,
             "plan": trip,
-            "text": trips.plan_text(
-                vacation or {}, trip, {p["id"]: self.label(p["id"]) for p in self.plants}
-            )
+            "text": trips.plan_text(vacation or {}, trip, labels, lang or self.language)
             if trip
             else None,
         }
 
-    def preview_vacation(self, start: date, end: date) -> dict[str, Any]:
+    def preview_vacation(self, start: date, end: date, lang: str | None = None) -> dict[str, Any]:
         """The plan for a trip that is not saved."""
         plan = self._plan({"start_date": start.isoformat(), "end_date": end.isoformat()})
         if plan is None:
             raise ValueError("This trip is already over")
-        return self.vacation_view(plan)
+        return self.vacation_view(plan, lang)
 
     def _check_notify(self, service: str | None) -> None:
         if not service:
@@ -453,7 +466,9 @@ class PlantManager:
         if not self.hass.services.has_service(domain or "notify", name):
             raise ValueError(f"The notify action {service} does not exist")
 
-    async def async_set_vacation(self, data: dict[str, Any]) -> dict[str, Any]:
+    async def async_set_vacation(
+        self, data: dict[str, Any], lang: str | None = None
+    ) -> dict[str, Any]:
         """Plan a vacation, or change the one that is planned or going on."""
         self._check_notify(data.get("sitter_notify"))
         if data["end_date"] < dt_util.now().date().isoformat():
@@ -463,7 +478,7 @@ class PlantManager:
             self.db.save_vacation, current["id"] if current else None, data, self._now()
         )
         await self.async_refresh()
-        return self.vacation_view()
+        return self.vacation_view(lang=lang)
 
     async def async_end_vacation(self) -> None:
         """Back early, or cancel the planned vacation."""
@@ -473,22 +488,27 @@ class PlantManager:
         await self._run(lambda: self.db.end_vacation(vacation_id, self._now(), started=started))
         await self.async_refresh()
 
-    async def async_send_plan(self) -> None:
-        """Send the plan to the plant sitter's notify action."""
+    async def async_send_plan(self, lang: str | None = None) -> None:
+        """Send the plan to the plant sitter's notify action (in ``lang``)."""
         if self.vacation is None or self.trip is None:
             raise NotFoundError("No vacation is planned")
         if not (service := (self.vacation.get("sitter_notify") or "").strip()):
             raise ValueError("Set a notify action for the plant sitter first")
-        await self._async_notify(service, self.vacation_view()["text"], title="Plant care")
+        lang = lang or self.language
+        await self._async_notify(
+            service, self.vacation_view(lang=lang)["text"], title=i18n.tr(lang, "Plant care")
+        )
 
-    def _prepare_message(self) -> str:
+    def _prepare_message(self, lang: str) -> str:
         """What to do before leaving."""
         trip = self.trip or {}
         lines = []
         if water := [self.label(pid) for pid in trip.get("prepare", [])]:
-            lines.append("💧 Water right before you leave: " + ", ".join(water))
+            lines.append(
+                i18n.tr(lang, "💧 Water right before you leave: {names}", names=", ".join(water))
+            )
         measures = [
-            f"{self.label(entry['plant_id'])}: {trips.TIP_TEXT[code].lower()}"
+            f"{self.label(entry['plant_id'])}: {i18n.tr_lower(lang, trips.TIP_TEXT[code])}"
             for entry in trip.get("plants", [])
             if entry["risk"] != trips.RISK_OK
             for code in entry["tips"]
@@ -497,12 +517,14 @@ class PlantManager:
         if measures:
             lines.append("🌤 " + "; ".join(measures))
         if visits := trip.get("visits"):
-            first = date.fromisoformat(visits[0]["date"]).strftime("%a %d %b")
-            lines.append(
-                f"🧑‍🌾 The plant sitter needs to come {len(visits)} "
-                f"time{'s' if len(visits) > 1 else ''}, first on {first}"
+            first = i18n.format_day(date.fromisoformat(visits[0]["date"]), lang)
+            text = (
+                "🧑‍🌾 The plant sitter needs to come 1 time, first on {day}"
+                if len(visits) == 1
+                else "🧑‍🌾 The plant sitter needs to come {n} times, first on {day}"
             )
-        return "\n".join(lines) or "All plants last until you are back 🌿"
+            lines.append(i18n.tr(lang, text, n=len(visits), day=first))
+        return "\n".join(lines) or i18n.tr(lang, "All plants last until you are back 🌿")
 
     @callback
     def _track_vacation(self) -> None:
@@ -520,15 +542,17 @@ class PlantManager:
         if self.trip and not self.trip["active"] and self.options[CONF_NOTIFY_ALERTS]:
             leave = datetime.fromisoformat(self.trip["leave"])
             if leave - dt_util.utcnow() <= PREPARE_AHEAD:
-                note = self._prepare_message()
+                note = self._prepare_message(self.language)
         if note == self._prepare_note:
             return
         self._prepare_note = note
         if note:
+            lang = self.language
             persistent_notification.async_create(
                 self.hass,
-                f"{note}\n\n[Open the vacation plan](/{PANEL_URL_PATH}/vacation)",
-                title=f"{NAME}: Before you leave",
+                f"{note}\n\n{i18n.tr(lang, '[Open the vacation plan]')}"
+                f"(/{PANEL_URL_PATH}/vacation)",
+                title=f"{NAME}: {i18n.tr(lang, 'Before you leave')}",
                 notification_id=f"{DOMAIN}_vacation",
             )
         else:
@@ -543,19 +567,23 @@ class PlantManager:
         new = [alert for key, alert in active.items() if key not in self._announced]
         resolved = self._announced - active.keys()
         notify = self.options[CONF_NOTIFY_ALERTS]
+        lang = self.language
         for alert in new:
             self.hass.bus.async_fire(EVENT_ALERT, alert)
             if alert["kind"] != KIND_PROBLEM:
                 continue
             if notify:
+                link = i18n.tr(lang, "[Open the plant]")
                 persistent_notification.async_create(
                     self.hass,
-                    f"{alert['message']}. [Open the plant](/{PANEL_URL_PATH}/plants)",
+                    f"{alert['message']}. {link}(/{PANEL_URL_PATH}/plants)",
                     title=NAME,
                     notification_id=f"{DOMAIN}_alert_{alert['key']}",
                 )
-            for service in self._targets(problems=True):
-                self.hass.async_create_task(self._async_notify(service, alert["message"]))
+            for service, service_lang in self._targets(problems=True).items():
+                self.hass.async_create_task(
+                    self._async_notify(service, alert_message(alert, service_lang))
+                )
         for key in resolved:
             self.hass.bus.async_fire(EVENT_ALERT_CLEARED, {"key": key})
             persistent_notification.async_dismiss(self.hass, f"{DOMAIN}_alert_{key}")
@@ -565,11 +593,12 @@ class PlantManager:
             notification_id = f"{DOMAIN}_{kind}"
             if names and notify:
                 if new or resolved:
+                    link = i18n.tr(lang, "[Open today's care]")
                     persistent_notification.async_create(
                         self.hass,
                         "\n".join(f"- {name}" for name in names)
-                        + f"\n\n[Open today's care](/{PANEL_URL_PATH}/today)",
-                        title=f"{NAME}: {title}",
+                        + f"\n\n{link}(/{PANEL_URL_PATH}/today)",
+                        title=f"{NAME}: {i18n.tr(lang, title)}",
                         notification_id=notification_id,
                     )
             else:
@@ -592,19 +621,24 @@ class PlantManager:
     def _user_targets(self) -> set[str]:
         return {t for settings in self.notify_users.values() for t in settings["targets"]}
 
-    def _targets(self, *, problems: bool = False, daily: bool = False) -> set[str]:
-        """Notify actions that get problems or the daily summary.
+    def _user_language(self, settings: dict[str, Any]) -> str:
+        return i18n.language(settings.get("language") or self.language)
 
-        The integration's notify action, unless a user picked that phone in the panel
-        (then their own settings decide), plus every user's phones that want it.
+    def _targets(self, *, problems: bool = False, daily: bool = False) -> dict[str, str]:
+        """Notify actions that get problems or the daily summary, with their language.
+
+        The integration's notify action (in Home Assistant's language), unless a user
+        picked that phone in the panel (then their own settings decide), plus every
+        user's phones that want it, in the user's language.
         """
-        targets = set()
-        if own := (self.options[CONF_NOTIFY_SERVICE] or "").strip():
-            targets.add(own)
-        targets -= self._user_targets()
+        targets = {}
+        own = (self.options[CONF_NOTIFY_SERVICE] or "").strip()
+        if own and own not in self._user_targets():
+            targets[own] = self.language
         for settings in self.notify_users.values():
             if (problems and settings["problems"]) or (daily and settings["daily"]):
-                targets.update(settings["targets"])
+                for service in settings["targets"]:
+                    targets.setdefault(service, self._user_language(settings))
         return targets
 
     def _visit_today(self) -> dict[str, Any] | None:
@@ -613,31 +647,38 @@ class PlantManager:
         today = dt_util.now().date().isoformat()
         return next((v for v in self.trip["visits"] if v["date"] == today), None)
 
-    def _daily_message(self, *, force: bool = False) -> str:
+    def _daily_message(self, lang: str, *, force: bool = False) -> str:
         """Today's summary for the plants' owners."""
         if self.away and self.vacation:
             if visit := self._visit_today():
                 names = ", ".join(self.label(p) for p in visit["plant_ids"])
                 if self.vacation.get("sitter_notify"):
-                    sitter = self.vacation.get("sitter") or "The plant sitter"
-                    return f"🧳 {sitter} waters today: {names}"
-                return f"🪴 Please water today: {names}"
-            return "Nothing to water today 🌿" if force else ""
-        lines = [summary_message(self.plants, self.status)]
+                    sitter = self.vacation.get("sitter") or i18n.tr(lang, "The plant sitter")
+                    return i18n.tr(
+                        lang, "🧳 {sitter} waters today: {names}", sitter=sitter, names=names
+                    )
+                return i18n.tr(lang, "🪴 Please water today: {names}", names=names)
+            return i18n.tr(lang, "Nothing to water today 🌿") if force else ""
+        lines = [summary_message(self.plants, self.status, lang)]
         if self.trip:
             leave = dt_util.as_local(datetime.fromisoformat(self.trip["leave"])).date()
             if leave == dt_util.now().date() + timedelta(days=1):
-                lines.append("🧳 Leaving tomorrow:\n" + self._prepare_message())
+                lines.append(
+                    i18n.tr(lang, "🧳 Leaving tomorrow:") + "\n" + self._prepare_message(lang)
+                )
         message = "\n".join(line for line in lines if line)
-        return message or ("All plants are happy 🌿" if force else "")
+        return message or (i18n.tr(lang, "All plants are happy 🌿") if force else "")
 
-    async def _async_send_daily(self, targets: set[str], *, force: bool = False) -> bool:
-        if not targets or not (message := self._daily_message(force=force)):
-            return False
-        title = "Plant care" if self.away else NAME
-        for service in sorted(targets):
+    async def _async_send_daily(self, targets: dict[str, str], *, force: bool = False) -> bool:
+        """Send the summary to each notify action, in its language."""
+        sent = False
+        for service, lang in sorted(targets.items()):
+            if not (message := self._daily_message(lang, force=force)):
+                continue
+            title = i18n.tr(lang, "Plant care") if self.away else NAME
             await self._async_notify(service, message, title=title)
-        return True
+            sent = True
+        return sent
 
     async def _async_sitter_reminder(self, *, force: bool = False) -> bool:
         """While away, tell the plant sitter what to water today."""
@@ -648,12 +689,17 @@ class PlantManager:
         visit = self._visit_today()
         if visit is None and not force:
             return False
+        lang = self.language
         message = (
-            "🪴 Please water today: " + ", ".join(self.label(p) for p in visit["plant_ids"])
+            i18n.tr(
+                lang,
+                "🪴 Please water today: {names}",
+                names=", ".join(self.label(p) for p in visit["plant_ids"]),
+            )
             if visit
-            else "Nothing to water today 🌿"
+            else i18n.tr(lang, "Nothing to water today 🌿")
         )
-        await self._async_notify(service, message, title="Plant care")
+        await self._async_notify(service, message, title=i18n.tr(lang, "Plant care"))
         return True
 
     async def _async_reminder_job(self, _now: datetime) -> None:
@@ -666,7 +712,8 @@ class PlantManager:
         minute = dt_util.as_local(now).strftime("%H:%M")
         for settings in self.notify_users.values():
             if settings["daily"] and settings["targets"] and settings["time"][:5] == minute:
-                await self._async_send_daily(set(settings["targets"]))
+                lang = self._user_language(settings)
+                await self._async_send_daily(dict.fromkeys(settings["targets"], lang))
 
     async def async_send_reminder(self, *, force: bool = False) -> bool:
         """Send today's care summary now to everyone. Returns whether anything was sent."""
@@ -699,25 +746,32 @@ class PlantManager:
         defaults = {"targets": [], "daily": True, "time": default_time, "problems": True}
         return {**defaults, **self.notify_users.get(user_id, {})}
 
-    async def async_set_notifications(self, user_id: str, settings: dict[str, Any]) -> None:
-        """Save which phones of a user get what."""
+    async def async_set_notifications(
+        self, user_id: str, settings: dict[str, Any], lang: str | None = None
+    ) -> None:
+        """Save which phones of a user get what; their notifications come in ``lang``."""
         for service in settings["targets"]:
             self._check_notify(service)
         if dt_util.parse_time(settings["time"]) is None:
             raise ValueError(f"Invalid time {settings['time']}")
         if settings["targets"]:
-            self.notify_users[user_id] = {**self.notification_settings(user_id), **settings}
+            saved = {**self.notification_settings(user_id), **settings}
+            if lang:
+                saved["language"] = i18n.language(lang)
+            self.notify_users[user_id] = saved
         else:
             self.notify_users.pop(user_id, None)
         await self._notify_store.async_save({"users": self.notify_users})
 
     async def async_test_notification(self, user_id: str) -> int:
         """Send a test to a user's phones. Returns how many."""
-        targets = self.notification_settings(user_id)["targets"]
+        settings = self.notification_settings(user_id)
+        message = i18n.tr(
+            self._user_language(settings), "🌿 Plant Manager notifications work on this phone."
+        )
+        targets = settings["targets"]
         for service in targets:
-            await self._async_notify(
-                service, "🌿 Plant Manager notifications work on this phone.", title=NAME
-            )
+            await self._async_notify(service, message, title=NAME)
         return len(targets)
 
     # -- plants ------------------------------------------------------------
@@ -729,21 +783,28 @@ class PlantManager:
         view["events"] = await self._run(self.db.events, plant_id)
         return view
 
-    async def async_create_plant(self, data: dict[str, Any]) -> dict[str, Any]:
+    async def async_create_plant(
+        self, data: dict[str, Any], lang: str | None = None
+    ) -> dict[str, Any]:
         """Create a plant. Without a profile, one is looked up for the species."""
-        plant_id = await self._async_create(data)
+        plant_id = await self._async_create(data, lang=lang)
         await self.async_refresh(tick=True)
         return self.plant_view(await self._run(self.db.get_plant, plant_id))
 
     async def _async_create(
-        self, data: dict[str, Any], *, source: str = "created", fill_profile: bool = False
+        self,
+        data: dict[str, Any],
+        *,
+        source: str = "created",
+        fill_profile: bool = False,
+        lang: str | None = None,
     ) -> str:
         """Create a plant without refreshing. ``fill_profile`` completes a partial profile."""
         data = dict(data)
         last_watered = data.pop("last_watered", None)
         if not data.get("profile") or (fill_profile and data.get("species")):
             resolved = await self.async_resolve_profile(
-                data.get("species") or "", data.get("family")
+                data.get("species") or "", data.get("family"), lang
             )
             given = data.get("profile") or {}
             data["profile"] = {**resolved["profile"], **given}
@@ -811,10 +872,12 @@ class PlantManager:
         await self.async_refresh()
 
     async def async_resolve_profile(
-        self, species: str, family: str | None = None
+        self, species: str, family: str | None = None, lang: str | None = None
     ) -> dict[str, Any]:
-        """Look up a care profile for a species."""
-        resolved = await async_resolve_profile(self.hass, self.options, species, family)
+        """Look up a care profile for a species (common name and tip in ``lang``)."""
+        resolved = await async_resolve_profile(
+            self.hass, self.options, species, family, lang or self.language
+        )
         return {
             "profile": resolved.profile,
             "sources": resolved.sources,
@@ -1043,7 +1106,7 @@ class PlantManager:
         """The plants as CSV."""
         return plants_to_csv(self.plants, self._area_names())
 
-    async def async_import_csv(self, text: str) -> dict[str, Any]:
+    async def async_import_csv(self, text: str, lang: str | None = None) -> dict[str, Any]:
         """Create plants from CSV rows. Returns what was created and what was skipped."""
         areas: dict[str, str] = {}
         for area_id, name in self._area_names().items():
@@ -1051,8 +1114,10 @@ class PlantManager:
             areas[area_id.lower()] = area_id
         plants, errors, warnings = await self._run(parse_plants_csv, text, areas)
         for data in plants:
-            await self._async_create(data, source="import", fill_profile=True)
+            await self._async_create(data, source="import", fill_profile=True, lang=lang)
         await self.async_refresh(tick=True)
+        for problem in (*errors, *warnings):
+            problem["error"] = i18n.translate_message(lang, problem["error"])
         return {"created": len(plants), "errors": errors, "warnings": warnings}
 
     async def async_create_backup(self) -> str:

@@ -44,8 +44,11 @@ from .const import (
     P_WINTER_DORMANCY,
     PROVIDER_AI_TASK,
 )
+from .i18n import language
 
 _LOGGER = logging.getLogger(__name__)
+
+_LANGUAGE_NAMES = {"en": "English", "de": "German"}
 
 OPB_URL = "https://open.plantbook.io/api/v1"
 TIMEOUT = aiohttp.ClientTimeout(total=20)
@@ -154,7 +157,7 @@ _OPB_MAP = {
 
 
 async def _async_ai_profile(
-    hass: HomeAssistant, entity_id: str | None, scientific_name: str
+    hass: HomeAssistant, entity_id: str | None, scientific_name: str, lang: str = "en"
 ) -> dict[str, Any] | None:
     try:
         from homeassistant.components import ai_task
@@ -199,9 +202,17 @@ async def _async_ai_profile(
     fields[vol.Optional(P_TOXIC_TO_PETS, description="Toxic to cats or dogs")] = (
         selector.BooleanSelector()
     )
-    fields[vol.Optional("common_name", description="English common name")] = selector.TextSelector()
     fields[
-        vol.Optional(P_NOTES, description="One short sentence of the most important care tip")
+        vol.Optional("common_name", description=f"Common name in {_LANGUAGE_NAMES[language(lang)]}")
+    ] = selector.TextSelector()
+    fields[
+        vol.Optional(
+            P_NOTES,
+            description=(
+                "One short sentence of the most important care tip, in "
+                f"{_LANGUAGE_NAMES[language(lang)]}"
+            ),
+        )
     ] = selector.TextSelector()
 
     try:
@@ -226,13 +237,14 @@ async def async_resolve_profile(
     config: dict[str, Any],
     scientific_name: str,
     family: str | None = None,
+    lang: str | None = None,
 ) -> ResolvedProfile:
     """Build the best available care profile for a species."""
     resolved = ResolvedProfile(profile=dict(species_db.DEFAULT_PROFILE))
 
     if entry := species_db.lookup(scientific_name, family):
-        resolved.profile.update(entry.profile)
-        resolved.common_name = entry.common_name
+        resolved.profile.update(species_db.profile(entry, lang))
+        resolved.common_name = species_db.common_name(entry, lang)
         resolved.sources.append(f"built-in database ({entry.key})")
 
     if opb := get_openplantbook(hass, config):
@@ -253,7 +265,11 @@ async def async_resolve_profile(
     if (
         entry is None
         and use_ai
-        and (ai := await _async_ai_profile(hass, config.get(CONF_AI_TASK_ENTITY), scientific_name))
+        and (
+            ai := await _async_ai_profile(
+                hass, config.get(CONF_AI_TASK_ENTITY), scientific_name, language(lang)
+            )
+        )
     ):
         common = ai.pop("common_name", None)
         had_opb = any(s.startswith("OpenPlantbook") for s in resolved.sources)
