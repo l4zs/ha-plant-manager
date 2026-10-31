@@ -4,6 +4,343 @@ const DOMAIN = "plant_manager";
 const VIEWS = ["plants", "today", "schedule", "vacation"];
 const VIEW_LABELS = { plants: "Plants", today: "Today", schedule: "Schedule", vacation: "Vacation" };
 
+// -- translations --------------------------------------------------------
+// Texts are written in English and looked up here, with {placeholders}.
+
+const GERMAN = {
+  // shell
+  Plants: "Pflanzen",
+  Today: "Heute",
+  Schedule: "Plan",
+  Vacation: "Urlaub",
+  " (away)": " (weg)",
+  Menu: "Menü",
+  "My notifications": "Meine Benachrichtigungen",
+  "Loading…": "Lädt…",
+  "Plant Manager is not available: {error}": "Plant Manager ist nicht verfügbar: {error}",
+  never: "nie",
+  "Overdue by {n} day": "Seit {n} Tag überfällig",
+  "Overdue by {n} days": "Seit {n} Tagen überfällig",
+  "Needs water now": "Braucht jetzt Wasser",
+  "Water {when}": "Gießen {when}",
+  "Estimated water left: {n} %": "Geschätzter Wasservorrat: {n} %",
+  // labels
+  OK: "OK",
+  "Water soon": "Bald gießen",
+  "Needs water": "Braucht Wasser",
+  Overdue: "Überfällig",
+  "Low (far from a window)": "Wenig (weit weg vom Fenster)",
+  "Medium (a few metres from a window)": "Mittel (ein paar Meter vom Fenster)",
+  "Bright, indirect": "Hell, indirekt",
+  "Direct sun": "Direkte Sonne",
+  Indoor: "Drinnen",
+  "Outdoor, sheltered from rain": "Draußen, vor Regen geschützt",
+  "Outdoor, gets rain": "Draußen, bekommt Regen",
+  Plastic: "Plastik",
+  "Terracotta / unglazed clay": "Terrakotta / unglasierter Ton",
+  "Glazed ceramic": "Glasierte Keramik",
+  "Fabric grow bag": "Pflanzsack aus Stoff",
+  "Self-watering pot": "Selbstbewässerungstopf",
+  "No drainage hole": "Ohne Abflussloch",
+  Watered: "Gegossen",
+  Fertilized: "Gedüngt",
+  "Soil still moist": "Erde noch feucht",
+  Repotted: "Umgetopft",
+  Pruned: "Geschnitten",
+  Misted: "Besprüht",
+  Note: "Notiz",
+  "soil was too dry": "Erde war zu trocken",
+  "just right": "genau richtig",
+  "soil was still wet": "Erde war noch nass",
+  Water: "Gießen",
+  Fertilize: "Düngen",
+  "Water before you leave": "Vor der Abreise gießen",
+  "Plant sitter waters": "Pflanzensitter gießt",
+  "Pot size": "Topfgröße",
+  "Pot type": "Topfart",
+  Light: "Licht",
+  "Room climate": "Raumklima",
+  Season: "Jahreszeit",
+  Placement: "Standort",
+  "Learned from you": "Von dir gelernt",
+  "Temperature sensor": "Temperatursensor",
+  "Humidity sensor": "Luftfeuchtigkeitssensor",
+  "Soil moisture sensor": "Bodenfeuchtesensor",
+  "Illuminance sensor": "Helligkeitssensor",
+  "Reference watering interval (days)": "Referenz-Gießintervall (Tage)",
+  "Fertilize every (days, 0 = never)": "Düngen alle (Tage, 0 = nie)",
+  "Min. temperature (°C)": "Min. Temperatur (°C)",
+  "Max. temperature (°C)": "Max. Temperatur (°C)",
+  "Min. humidity (%)": "Min. Luftfeuchtigkeit (%)",
+  "Max. humidity (%)": "Max. Luftfeuchtigkeit (%)",
+  "Water below soil moisture (%)": "Gießen unter Bodenfeuchte (%)",
+  "Too wet above soil moisture (%)": "Zu nass über Bodenfeuchte (%)",
+  "Min. daily peak light (lx)": "Min. Tageshöchstwert Licht (lx)",
+  "Max. daily peak light (lx)": "Max. Tageshöchstwert Licht (lx)",
+  AI: "KI",
+  // plants
+  "Search name, species, area…": "Name, Art, Bereich suchen…",
+  "All areas": "Alle Bereiche",
+  "Any status": "Jeder Status",
+  "Needs attention": "Braucht Aufmerksamkeit",
+  "+ Add plant": "+ Pflanze hinzufügen",
+  "⇅ Import / export": "⇅ Import / Export",
+  "No plants match the filters.": "Keine Pflanze passt zu den Filtern.",
+  "No plants yet. Add your first plant, take a photo and it is identified for you.":
+    "Noch keine Pflanzen. Füge deine erste Pflanze hinzu, mach ein Foto und sie wird für dich erkannt.",
+  "Import & export": "Import & Export",
+  "Export CSV": "CSV exportieren",
+  "Export JSON": "JSON exportieren",
+  "Import CSV": "CSV importieren",
+  "Download backup": "Sicherung herunterladen",
+  "Restore backup…": "Sicherung wiederherstellen…",
+  "The CSV has one row per plant and uses the same columns for export and import, so an export is a template for adding many plants from a spreadsheet. Only <b>name</b> and <b>species</b> are needed; the care profile is looked up for the species, and profile columns you fill in win. A backup contains the database and all photos; Home Assistant's own backups include them too.":
+    "Die CSV hat eine Zeile pro Pflanze und dieselben Spalten für Export und Import, ein Export ist also eine Vorlage, um viele Pflanzen aus einer Tabelle hinzuzufügen. Nur <b>name</b> und <b>species</b> (Art) sind nötig; das Pflegeprofil wird für die Art nachgeschlagen, und ausgefüllte Profilspalten haben Vorrang. Eine Sicherung enthält die Datenbank und alle Fotos; die Sicherungen von Home Assistant enthalten sie auch.",
+  // today
+  "💧 Watered": "💧 Gegossen",
+  "Watered; it was too dry, remind me earlier": "Gegossen; es war zu trocken, früher erinnern",
+  "Was too dry": "War zu trocken",
+  "Not yet; remind me a bit later": "Noch nicht; etwas später erinnern",
+  "Still moist": "Noch feucht",
+  Problems: "Probleme",
+  "Last fertilized {when}": "Zuletzt gedüngt {when}",
+  "🌱 Fertilized": "🌱 Gedüngt",
+  "Need water": "Brauchen Wasser",
+  "All plants are happy. Nothing to do today.": "Alle Pflanzen sind zufrieden. Heute gibt es nichts zu tun.",
+  "Add plants to get reminders here.": "Füge Pflanzen hinzu, um hier Erinnerungen zu bekommen.",
+  // vacation banner and schedule
+  "Away until {date}": "Weg bis {date}",
+  "Away {start} – {end}": "Weg {start} – {end}",
+  "The plant sitter": "Der Pflanzensitter",
+  "{sitter} waters {n} time": "{sitter} gießt {n}-mal",
+  "{sitter} waters {n} times": "{sitter} gießt {n}-mal",
+  "No one needs to water": "Niemand muss gießen",
+  Plan: "Plan",
+  "Nothing planned for the next four weeks.": "Für die nächsten vier Wochen ist nichts geplant.",
+  "Projected from the current conditions; the schedule adapts to the room climate, the season and your feedback.":
+    "Aus den aktuellen Bedingungen berechnet; der Plan passt sich an Raumklima, Jahreszeit und deine Rückmeldungen an.",
+  // vacation
+  "Add plants first, then plan who waters what while you are away.":
+    "Füge zuerst Pflanzen hinzu und plane dann, wer was gießt, während du weg bist.",
+  "You're away, back {when}": "Du bist weg, zurück {when}",
+  "Leaving {when}": "Abreise {when}",
+  " · {sitter} waters": " · {sitter} gießt",
+  Change: "Ändern",
+  "I'm back": "Ich bin zurück",
+  "Cancel vacation": "Urlaub absagen",
+  "Change the vacation": "Urlaub ändern",
+  "Plan a vacation": "Urlaub planen",
+  "Plant Manager works out which plants to water right before you leave, what to move out of the sun, and on which days someone has to come by.":
+    "Plant Manager rechnet aus, welche Pflanzen du direkt vor der Abreise gießt, was aus der Sonne muss und an welchen Tagen jemand vorbeikommen muss.",
+  "Leaving (in the morning)": "Abreise (morgens)",
+  "Back (in the evening)": "Zurück (abends)",
+  "Plant sitter": "Pflanzensitter",
+  "Name (optional)": "Name (optional)",
+  "Sitter's notify action": "Benachrichtigungsaktion des Sitters",
+  "Notes for the sitter": "Notizen für den Sitter",
+  "Where the key and the watering can are, …": "Wo der Schlüssel und die Gießkanne sind, …",
+  "With a notify action, the sitter gets a reminder on the morning of each day they need to come.":
+    "Mit einer Benachrichtigungsaktion bekommt der Sitter an jedem Tag, an dem er kommen muss, morgens eine Erinnerung.",
+  Save: "Speichern",
+  "Save vacation": "Urlaub speichern",
+  Cancel: "Abbrechen",
+  Plant: "Pflanze",
+  "Before you leave": "Vor der Abreise",
+  "Water thoroughly the day before or the morning you leave": "Am Tag vorher oder am Morgen der Abreise gründlich gießen",
+  "Last watered {when}": "Zuletzt gegossen {when}",
+  "Never watered": "Noch nie gegossen",
+  "So they dry out more slowly": "Damit sie langsamer austrocknen",
+  "(lasts {with} instead of {without} days)": "(hält {with} statt {without} Tage)",
+  "{sitter} waters on {n} day": "{sitter} gießt an {n} Tag",
+  "{sitter} waters on {n} days": "{sitter} gießt an {n} Tagen",
+  "🎉 No one needs to come: every plant lasts until you are back.":
+    "🎉 Niemand muss kommen: jede Pflanze hält durch, bis du zurück bist.",
+  "🎉 No one needs to come: every plant lasts until you are back if you water the ones above before leaving.":
+    "🎉 Niemand muss kommen: jede Pflanze hält durch, bis du zurück bist, wenn du die oben genannten vor der Abreise gießt.",
+  "Send to {sitter}": "An {sitter} senden",
+  "the sitter": "den Sitter",
+  "Copy plan": "Plan kopieren",
+  "Print plan": "Plan drucken",
+  Lasts: "Hält durch",
+  "Lasts after watering": "Hält nach dem Gießen durch",
+  "Lasts if moved": "Hält, wenn umgestellt",
+  "Sitter: {n}×": "Sitter: {n}×",
+  "All plants": "Alle Pflanzen",
+  "Water lasts": "Wasser reicht",
+  "While away": "Während du weg bist",
+  "{n} d": "{n} T",
+  "Projected for {days} days away with today's room climate and the season mid-trip. Turning the heating down or the air conditioning off changes how fast the soil dries. Nobody to water? A wick from a jug of water, a self-watering spike, or a bathtub with a few centimetres of water on a towel keeps most potted plants going for one or two weeks.":
+    "Berechnet für {days} Tage mit dem heutigen Raumklima und der Jahreszeit zur Reisemitte. Wenn du die Heizung herunter- oder die Klimaanlage ausschaltest, trocknet die Erde anders schnell. Niemand zum Gießen? Ein Docht aus einem Wasserkrug, ein Bewässerungskegel oder eine Badewanne mit ein paar Zentimetern Wasser auf einem Handtuch versorgen die meisten Topfpflanzen ein bis zwei Wochen.",
+  "Thank you, {sitter}!": "Danke, {sitter}!",
+  "Plant care": "Pflanzenpflege",
+  "How to water": "So wird gegossen",
+  "Water slowly until it runs out at the bottom, then empty the saucer after 15 minutes. If the soil is still moist 2 cm deep, skip it.":
+    "Langsam gießen, bis unten Wasser herausläuft, und den Untersetzer nach 15 Minuten leeren. Ist die Erde in 2 cm Tiefe noch feucht, die Pflanze auslassen.",
+  Notes: "Notizen",
+  "Allow pop-ups to print the plan": "Erlaube Pop-ups, um den Plan zu drucken",
+  // notifications
+  "Send to": "Senden an",
+  "(someone else's)": "(von jemand anderem)",
+  "No phones yet. Install the Home Assistant app on your phone and log in to this Home Assistant; the phone then shows up here.":
+    "Noch keine Handys. Installiere die Home-Assistant-App auf deinem Handy und melde dich bei diesem Home Assistant an; dann erscheint das Handy hier.",
+  What: "Was",
+  "Daily summary: what to water and fertilize": "Tägliche Übersicht: was gegossen und gedüngt werden muss",
+  At: "Um",
+  "Problems right away (too cold, too dark, soil too wet, …)": "Probleme sofort (zu kalt, zu dunkel, Erde zu nass, …)",
+  "The summary is only sent on days with something to do; while you are on vacation it says what the plant sitter waters. These settings are only for you{user}; everyone can choose their own.":
+    "Die Übersicht kommt nur an Tagen, an denen etwas zu tun ist; während du im Urlaub bist, sagt sie, was der Pflanzensitter gießt. Diese Einstellungen gelten nur für dich{user}; alle können ihre eigenen wählen.",
+  "Save and send a test": "Speichern und Test senden",
+  // editor
+  "Could not load plant: {error}": "Pflanze konnte nicht geladen werden: {error}",
+  "New plant": "Neue Pflanze",
+  "Saving…": "Speichert…",
+  "Take a photo of the plant (leaves in view) and {provider} suggests what it is.":
+    "Mach ein Foto der Pflanze (mit Blättern im Bild) und {provider} schlägt vor, was es ist.",
+  "Add a photo. To identify plants from photos, choose a service under <b>Settings → Devices & services → Plant Manager → Configure</b>.":
+    "Füge ein Foto hinzu. Um Pflanzen auf Fotos zu erkennen, wähle einen Dienst unter <b>Einstellungen → Geräte & Dienste → Plant Manager → Konfigurieren</b>.",
+  "Identifying…": "Erkenne…",
+  "{n} % match": "{n} % Übereinstimmung",
+  "Pick the right one, or type the species below if none fits.": "Wähle die richtige aus, oder gib unten die Art ein, wenn keine passt.",
+  "The plant could not be identified. Try a closer photo of the leaves, or enter the species below.":
+    "Die Pflanze konnte nicht erkannt werden. Versuch ein näheres Foto der Blätter, oder gib unten die Art ein.",
+  "The identification service rejected the API key.": "Der Erkennungsdienst hat den API-Schlüssel abgelehnt.",
+  "The identification service's daily quota is used up.": "Das Tageskontingent des Erkennungsdienstes ist aufgebraucht.",
+  "Could not reach the identification service.": "Der Erkennungsdienst ist nicht erreichbar.",
+  "No plant was recognised in this photo.": "Auf diesem Foto wurde keine Pflanze erkannt.",
+  "Identification failed. Check the logs.": "Die Erkennung ist fehlgeschlagen. Sieh im Protokoll nach.",
+  "Identify again": "Neu erkennen",
+  Identify: "Erkennen",
+  "📷 Take photo": "📷 Foto aufnehmen",
+  "⬆ Upload": "⬆ Hochladen",
+  "waters less often": "seltener gießen",
+  "waters more often": "öfter gießen",
+  Care: "Pflege",
+  "Next watering": "Nächstes Gießen",
+  Every: "Alle",
+  "{n} days": "{n} Tage",
+  "Water left": "Wasservorrat",
+  "Last watered": "Zuletzt gegossen",
+  "Soil before watering": "Erde vor dem Gießen",
+  "Soil before watering…": "Erde vor dem Gießen…",
+  "Why every {n} days": "Warum alle {n} Tage",
+  "Reference interval for the species": "Referenzintervall der Art",
+  "{n} % humidity": "{n} % Luftfeuchtigkeit",
+  "soil {n} %": "Erde {n} %",
+  "fertilizing rests in winter": "Düngen pausiert im Winter",
+  "fertilize {when}": "düngen {when}",
+  "no fertilizing": "kein Dünger",
+  Cover: "Titelbild",
+  "Make cover": "Als Titelbild",
+  Delete: "Löschen",
+  "On save": "Beim Speichern",
+  Remove: "Entfernen",
+  Photos: "Fotos",
+  "No photos yet.": "Noch keine Fotos.",
+  Details: "Details",
+  Name: "Name",
+  "e.g. Monty": "z. B. Monty",
+  Species: "Art",
+  "e.g. Monstera deliciosa": "z. B. Monstera deliciosa",
+  "Common name": "Trivialname",
+  Area: "Bereich",
+  None: "Keiner",
+  "No areas set up": "Keine Bereiche eingerichtet",
+  Location: "Standort",
+  "Light at its spot": "Licht an ihrem Platz",
+  "Pot diameter (cm)": "Topfdurchmesser (cm)",
+  "Got it on": "Bekommen am",
+  Sensors: "Sensoren",
+  "Room temperature and humidity tune the watering interval (warm, dry air dries the soil faster). A soil moisture sensor replaces the estimate and detects waterings by itself. Light is used to warn when the spot is too dark or too bright.":
+    "Raumtemperatur und Luftfeuchtigkeit passen das Gießintervall an (warme, trockene Luft trocknet die Erde schneller). Ein Bodenfeuchtesensor ersetzt die Schätzung und erkennt das Gießen selbst. Mit dem Licht wird gewarnt, wenn der Platz zu dunkel oder zu hell ist.",
+  "Care profile": "Pflegeprofil",
+  "Looking up care for {species}…": "Schlage die Pflege für {species} nach…",
+  "From {sources}.": "Aus {sources}.",
+  "Prefers {light} light.": "Mag Licht: {light}.",
+  "⚠ Toxic to pets.": "⚠ Giftig für Haustiere.",
+  "Safe for pets.": "Ungiftig für Haustiere.",
+  "Rests in winter (waters much less, no fertilizer)": "Ruht im Winter (viel weniger gießen, kein Dünger)",
+  "The reference interval is for a 15 cm plastic pot, medium light, 21 °C and 50 % humidity in summer. Pot, light, room climate and season are applied on top.":
+    "Das Referenzintervall gilt für einen 15-cm-Plastiktopf, mittleres Licht, 21 °C und 50 % Luftfeuchtigkeit im Sommer. Topf, Licht, Raumklima und Jahreszeit kommen dazu.",
+  "Look up care for the species again": "Pflege für die Art neu nachschlagen",
+  "Care log": "Pflegeprotokoll",
+  "Notes (optional)": "Notizen (optional)",
+  Add: "Hinzufügen",
+  "(detected by the moisture sensor)": "(vom Feuchtesensor erkannt)",
+  "Nothing logged yet.": "Noch nichts eingetragen.",
+  "Delete plant": "Pflanze löschen",
+  "Please enter a name": "Bitte gib einen Namen ein",
+  "Please enter the species, or take a photo to identify it": "Bitte gib die Art ein oder mach ein Foto, um sie zu erkennen",
+  "Saved, but {n} photo(s) failed: {error}": "Gespeichert, aber {n} Foto(s) fehlgeschlagen: {error}",
+  "Saved {name}": "{name} gespeichert",
+  "Could not save: {error}": "Speichern fehlgeschlagen: {error}",
+  "Upload failed: {error}": "Hochladen fehlgeschlagen: {error}",
+  "Could not look up the care profile: {error}": "Das Pflegeprofil konnte nicht nachgeschlagen werden: {error}",
+  // toasts
+  "Too late to undo": "Zu spät zum Rückgängigmachen",
+  Undone: "Rückgängig gemacht",
+  Undo: "Rückgängig",
+  "{name} watered": "{name} gegossen",
+  "OK, {name} is reminded a bit later": "OK, an {name} wird etwas später erinnert",
+  Logged: "Eingetragen",
+  Removed: "Entfernt",
+  "Photo deleted": "Foto gelöscht",
+  "Notifications saved": "Benachrichtigungen gespeichert",
+  "Test sent to {n} phone": "Test an {n} Handy gesendet",
+  "Test sent to {n} phones": "Test an {n} Handys gesendet",
+  "Vacation saved. Have a good trip!": "Urlaub gespeichert. Gute Reise!",
+  "End the vacation now? Reminders go back to you.": "Urlaub jetzt beenden? Die Erinnerungen gehen wieder an dich.",
+  "Cancel the planned vacation?": "Den geplanten Urlaub absagen?",
+  "Welcome back! 🌿": "Willkommen zurück! 🌿",
+  "Vacation cancelled": "Urlaub abgesagt",
+  "Sent to {sitter}": "An {sitter} gesendet",
+  "Plan copied": "Plan kopiert",
+  "Copying is not allowed here; use Print plan instead": "Kopieren ist hier nicht erlaubt; nutze stattdessen Plan drucken",
+  "Delete {name} with its photos and care log?": "{name} mit Fotos und Pflegeprotokoll löschen?",
+  "Deleted {name}": "{name} gelöscht",
+  skipped: "übersprungen",
+  "Imported {n} plant(s).": "{n} Pflanze(n) importiert.",
+  "Imported {n} plant(s)": "{n} Pflanze(n) importiert",
+  "⚠ Row {row} {name}: {error}": "⚠ Zeile {row} {name}: {error}",
+  "Import failed: {error}": "Import fehlgeschlagen: {error}",
+  "Replace ALL plants, photos and care logs with this backup? The current data is kept as *.before-restore.":
+    "ALLE Pflanzen, Fotos und Pflegeprotokolle durch diese Sicherung ersetzen? Die aktuellen Daten bleiben als *.before-restore erhalten.",
+  "Restored {plants} plant(s) and {photos} photo(s)": "{plants} Pflanze(n) und {photos} Foto(s) wiederhergestellt",
+  "Restore failed: {error}": "Wiederherstellen fehlgeschlagen: {error}",
+  // where a care profile came from (stored in English)
+  "built-in database": "eingebaute Datenbank",
+  "AI estimate": "KI-Schätzung",
+  "generic defaults": "allgemeine Standardwerte",
+  "CSV import": "CSV-Import",
+};
+
+const TRANSLATIONS = { de: GERMAN };
+let LANG = "en";
+let LOCALE = "en"; // for numbers: "5,3" in German
+
+// The user's language from their Home Assistant profile ("de", "de-CH", ...).
+const languageOf = (hass) => {
+  const code = String(hass?.locale?.language || hass?.language || "en").toLowerCase().split("-")[0];
+  return TRANSLATIONS[code] ? code : "en";
+};
+
+const t = (text, values = {}) =>
+  (TRANSLATIONS[LANG]?.[text] ?? text).replace(/\{(\w+)\}/g, (match, key) =>
+    key in values ? String(values[key]) : match
+  );
+
+// Singular or plural, with the count as {n}.
+const tn = (n, one, other, values = {}) => t(n === 1 ? one : other, { n, ...values });
+
+// A number with a fixed count of decimals, in the user's locale.
+const num = (value, digits = 1) =>
+  new Intl.NumberFormat(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+
+const SOURCE_PREFIXES = ["built-in database", "AI estimate", "generic defaults", "CSV import"];
+const sourceLabel = (source) => {
+  const prefix = SOURCE_PREFIXES.find((p) => source.startsWith(p));
+  return prefix ? t(prefix) + source.slice(prefix.length) : source;
+};
+
 const LABELS = {
   // statuses
   ok: "OK",
@@ -97,7 +434,7 @@ const esc = (value) =>
   );
 
 const human = (key) =>
-  LABELS[key] ?? (key ? key.charAt(0).toUpperCase() + key.slice(1).replaceAll("_", " ") : "");
+  t(LABELS[key] ?? (key ? key.charAt(0).toUpperCase() + key.slice(1).replaceAll("_", " ") : ""));
 
 const isoDate = (d) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -119,7 +456,7 @@ function startOfDay(date) {
 
 // "today", "in 3 days", "2 weeks ago"
 function relativeDay(iso, lang) {
-  if (!iso) return "never";
+  if (!iso) return t("never");
   const days = Math.round((startOfDay(iso) - startOfDay(Date.now())) / 86400000);
   const format = new Intl.RelativeTimeFormat(lang || "en", { numeric: "auto" });
   if (Math.abs(days) < 14) return format.format(days, "day");
@@ -132,9 +469,9 @@ function dueText(care, lang) {
   if (!care) return "";
   if (care.needs_water) {
     const late = Math.round((care.dryness - 1) * care.interval_days);
-    return late >= 1 ? `Overdue by ${late} day${late === 1 ? "" : "s"}` : "Needs water now";
+    return late >= 1 ? tn(late, "Overdue by {n} day", "Overdue by {n} days") : t("Needs water now");
   }
-  return `Water ${relativeDay(care.next_watering, lang)}`;
+  return t("Water {when}", { when: relativeDay(care.next_watering, lang) });
 }
 
 const reserveColor = (care) =>
@@ -362,8 +699,24 @@ class PlantManagerPanel extends HTMLElement {
 
   set hass(hass) {
     const first = !this._hass;
+    const language = languageOf(hass);
+    const changed = language !== LANG;
+    LANG = language;
+    LOCALE = hass.locale?.language || hass.language || "en";
     this._hass = hass;
     if (first) this._init();
+    else if (changed && this._config) this._reloadLanguage();
+  }
+
+  // Texts from the backend (species, problems, the sitter's plan) come in the new language.
+  async _reloadLanguage() {
+    try {
+      await this._load();
+    } catch (err) {
+      // keep what is shown
+    }
+    this._renderShell();
+    if (this._notify) this._renderNotify();
   }
 
   get hass() {
@@ -401,15 +754,15 @@ class PlantManagerPanel extends HTMLElement {
   // -- data --------------------------------------------------------------
 
   _ws(command, data = {}) {
-    return this._hass.callWS({ type: `${DOMAIN}/${command}`, ...data });
+    return this._hass.callWS({ type: `${DOMAIN}/${command}`, language: LANG, ...data });
   }
 
   async _init() {
-    this.shadowRoot.innerHTML = `<style>${STYLES}</style><main><div class="empty">Loading…</div></main>`;
+    this.shadowRoot.innerHTML = `<style>${STYLES}</style><main><div class="empty">${t("Loading…")}</div></main>`;
     try {
       await this._load();
     } catch (err) {
-      this.shadowRoot.innerHTML = `<style>${STYLES}</style><main><div class="empty">Plant Manager is not available: ${esc(err.message)}</div></main>`;
+      this.shadowRoot.innerHTML = `<style>${STYLES}</style><main><div class="empty">${esc(t("Plant Manager is not available: {error}", { error: err.message }))}</div></main>`;
       return;
     }
     this._renderShell();
@@ -465,10 +818,10 @@ class PlantManagerPanel extends HTMLElement {
       <style>${STYLES}</style>
       <div class="${this._narrow ? "narrow" : ""}">
         <div class="toolbar">
-          ${this._narrow ? `<button class="menu" data-action="menu" title="Menu">☰</button>` : ""}
-          <h1>Plants</h1>
+          ${this._narrow ? `<button class="menu" data-action="menu" title="${t("Menu")}">☰</button>` : ""}
+          <h1>${t("Plants")}</h1>
           <div class="tabs" id="tabs"></div>
-          <button class="menu" data-action="open-notify" title="My notifications" style="margin-left:auto">🔔</button>
+          <button class="menu" data-action="open-notify" title="${t("My notifications")}" style="margin-left:auto">🔔</button>
         </div>
         <main id="main"></main>
         <div id="editor"></div>
@@ -489,8 +842,8 @@ class PlantManagerPanel extends HTMLElement {
     tabs.innerHTML = VIEWS.map(
       (view) => `
         <button class="tab ${view === this._view ? "active" : ""}" data-action="view" data-view="${view}">
-          ${view === "vacation" && this._trip?.vacation ? "🧳 " : ""}${VIEW_LABELS[view]}${
-            view === "vacation" && away ? " (away)" : ""
+          ${view === "vacation" && this._trip?.vacation ? "🧳 " : ""}${t(VIEW_LABELS[view])}${
+            view === "vacation" && away ? t(" (away)") : ""
           }${badges[view] ? `<span class="badge">${badges[view]}</span>` : ""}
         </button>`
     ).join("");
@@ -556,7 +909,7 @@ class PlantManagerPanel extends HTMLElement {
 
   _reserveBar(care) {
     const share = Math.max(0, Math.min(100, care?.water_reserve ?? 0));
-    return `<div class="reserve" title="Estimated water left: ${Math.round(share)} %"><div style="width:${share}%;background:${reserveColor(care)}"></div></div>`;
+    return `<div class="reserve" title="${t("Estimated water left: {n} %", { n: Math.round(share) })}"><div style="width:${share}%;background:${reserveColor(care)}"></div></div>`;
   }
 
   _renderPlants() {
@@ -566,15 +919,15 @@ class PlantManagerPanel extends HTMLElement {
     const areas = this._areas();
     return `
       <div class="filters">
-        <input type="search" placeholder="Search name, species, area…" value="${esc(q)}" data-filter="q">
-        ${areas.length ? `<select data-filter="area">${this._options(areas.map((a) => a.area_id), area, { empty: "All areas", label: (id) => this._areaName(id) })}</select>` : ""}
+        <input type="search" placeholder="${esc(t("Search name, species, area…"))}" value="${esc(q)}" data-filter="q">
+        ${areas.length ? `<select data-filter="area">${this._options(areas.map((a) => a.area_id), area, { empty: t("All areas"), label: (id) => this._areaName(id) })}</select>` : ""}
         <select data-filter="status">
-          <option value="" ${status === "" ? "selected" : ""}>Any status</option>
-          <option value="attention" ${status === "attention" ? "selected" : ""}>Needs attention</option>
+          <option value="" ${status === "" ? "selected" : ""}>${t("Any status")}</option>
+          <option value="attention" ${status === "attention" ? "selected" : ""}>${t("Needs attention")}</option>
           ${this._options(this._config.statuses, status)}
         </select>
-        <button class="btn primary" data-action="new-plant">+ Add plant</button>
-        <button class="btn" data-action="toggle-data" aria-expanded="${this._showData}">⇅ Import / export</button>
+        <button class="btn primary" data-action="new-plant">${t("+ Add plant")}</button>
+        <button class="btn" data-action="toggle-data" aria-expanded="${this._showData}">${t("⇅ Import / export")}</button>
       </div>
       ${this._showData ? this._dataSection() : ""}
       ${
@@ -586,7 +939,7 @@ class PlantManagerPanel extends HTMLElement {
                 return `
             <div class="plant-card ${care?.needs_water ? "needs" : ""}" role="button" tabindex="0" data-action="open-plant" data-id="${plant.id}">
               <div class="thumb">${plant.photos?.[0] ? `<img src="${esc(plant.photos[0].url)}" alt="" loading="lazy">` : "🪴"}
-                <button class="btn small water quick" data-action="water" data-id="${plant.id}" title="Watered">💧</button>
+                <button class="btn small water quick" data-action="water" data-id="${plant.id}" title="${t("Watered")}">💧</button>
               </div>
               <div class="info">
                 <div class="name">${esc(plant.name)}</div>
@@ -603,8 +956,8 @@ class PlantManagerPanel extends HTMLElement {
               .join("")}</div>`
           : `<div class="empty">${
               this._plants.length
-                ? "No plants match the filters."
-                : `<div class="hero">🌱</div>No plants yet. Add your first plant, take a photo and it is identified for you.`
+                ? t("No plants match the filters.")
+                : `<div class="hero">🌱</div>${t("No plants yet. Add your first plant, take a photo and it is identified for you.")}`
             }</div>`
       }`;
   }
@@ -613,22 +966,19 @@ class PlantManagerPanel extends HTMLElement {
     const admin = this._hass.user?.is_admin;
     return `
       <div class="section">
-        <h2>Import & export</h2>
+        <h2>${t("Import & export")}</h2>
         <div class="actions-bar">
-          <button class="btn" data-action="export-csv">Export CSV</button>
-          <button class="btn" data-action="export-json">Export JSON</button>
-          <label class="btn">Import CSV<input type="file" accept=".csv,text/csv" data-import-csv hidden></label>
+          <button class="btn" data-action="export-csv">${t("Export CSV")}</button>
+          <button class="btn" data-action="export-json">${t("Export JSON")}</button>
+          <label class="btn">${t("Import CSV")}<input type="file" accept=".csv,text/csv" data-import-csv hidden></label>
           ${
             admin
-              ? `<button class="btn" data-action="backup">Download backup</button>
-                 <label class="btn danger">Restore backup…<input type="file" accept=".zip" data-restore hidden></label>`
+              ? `<button class="btn" data-action="backup">${t("Download backup")}</button>
+                 <label class="btn danger">${t("Restore backup…")}<input type="file" accept=".zip" data-restore hidden></label>`
               : ""
           }
         </div>
-        <p class="hint">The CSV has one row per plant and uses the same columns for export and import, so an
-          export is a template for adding many plants from a spreadsheet. Only <b>name</b> and
-          <b>species</b> are needed; the care profile is looked up for the species, and profile columns you
-          fill in win. A backup contains the database and all photos; Home Assistant's own backups include them too.</p>
+        <p class="hint">${t("The CSV has one row per plant and uses the same columns for export and import, so an export is a template for adding many plants from a spreadsheet. Only <b>name</b> and <b>species</b> are needed; the care profile is looked up for the species, and profile columns you fill in win. A backup contains the database and all photos; Home Assistant's own backups include them too.")}</p>
         ${this._importReport}
       </div>`;
   }
@@ -665,13 +1015,13 @@ class PlantManagerPanel extends HTMLElement {
     const fertilize = this._plants.filter((p) => p.care?.fertilize_due);
     const problems = this._alerts.filter((a) => a.kind === "problem");
     const waterActions = (plant) => `
-      <button class="btn small water" data-action="water" data-id="${plant.id}">💧 Watered</button>
-      <button class="btn small" data-action="water" data-feedback="too_dry" data-id="${plant.id}" title="Watered; it was too dry, remind me earlier">Was too dry</button>
-      <button class="btn small" data-action="snooze" data-id="${plant.id}" title="Not yet; remind me a bit later">Still moist</button>`;
+      <button class="btn small water" data-action="water" data-id="${plant.id}">${t("💧 Watered")}</button>
+      <button class="btn small" data-action="water" data-feedback="too_dry" data-id="${plant.id}" title="${t("Watered; it was too dry, remind me earlier")}">${t("Was too dry")}</button>
+      <button class="btn small" data-action="snooze" data-id="${plant.id}" title="${t("Not yet; remind me a bit later")}">${t("Still moist")}</button>`;
     const sections = [];
     if (problems.length) {
       sections.push(`
-        <div class="section alerts"><h2>Problems</h2>
+        <div class="section alerts"><h2>${t("Problems")}</h2>
           ${problems
             .map(
               (a) => `<div class="warning ${a.severity}">⚠ <button class="link" data-action="open-plant" data-id="${a.plant_id}" style="padding:0">${esc(a.message)}</button></div>`
@@ -681,25 +1031,25 @@ class PlantManagerPanel extends HTMLElement {
     }
     if (needs.length) {
       sections.push(`
-        <div class="section"><h2>Needs water</h2><div class="list">
+        <div class="section"><h2>${t("Needs water")}</h2><div class="list">
           ${needs.map((p) => this._plantRow(p, esc(dueText(p.care, lang)), waterActions(p))).join("")}
         </div></div>`);
     }
     if (soon.length) {
       sections.push(`
-        <div class="section"><h2>Water soon</h2><div class="list">
+        <div class="section"><h2>${t("Water soon")}</h2><div class="list">
           ${soon.map((p) => this._plantRow(p, esc(dueText(p.care, lang)), waterActions(p))).join("")}
         </div></div>`);
     }
     if (fertilize.length) {
       sections.push(`
-        <div class="section"><h2>Fertilize</h2><div class="list">
+        <div class="section"><h2>${t("Fertilize")}</h2><div class="list">
           ${fertilize
             .map((p) =>
               this._plantRow(
                 p,
-                `Last fertilized ${esc(relativeDay(p.last_fertilized, lang))}`,
-                `<button class="btn small" data-action="log" data-kind="fertilize" data-id="${p.id}">🌱 Fertilized</button>`
+                esc(t("Last fertilized {when}", { when: relativeDay(p.last_fertilized, lang) })),
+                `<button class="btn small" data-action="log" data-kind="fertilize" data-id="${p.id}">${t("🌱 Fertilized")}</button>`
               )
             )
             .join("")}
@@ -713,13 +1063,13 @@ class PlantManagerPanel extends HTMLElement {
     return `
       ${this._trip?.plan?.active ? this._tripBanner() : ""}
       <div class="tiles">
-        <div class="tile"><div class="muted">Plants</div><div class="value">${counts.total}</div></div>
-        <div class="tile"><div class="muted">Need water</div><div class="value">${counts.needs}</div></div>
-        <div class="tile"><div class="muted">Problems</div><div class="value">${counts.problems}</div></div>
+        <div class="tile"><div class="muted">${t("Plants")}</div><div class="value">${counts.total}</div></div>
+        <div class="tile"><div class="muted">${t("Need water")}</div><div class="value">${counts.needs}</div></div>
+        <div class="tile"><div class="muted">${t("Problems")}</div><div class="value">${counts.problems}</div></div>
       </div>
       ${
         sections.join("") ||
-        `<div class="empty"><div class="hero">🌿</div>${this._plants.length ? "All plants are happy. Nothing to do today." : "Add plants to get reminders here."}</div>`
+        `<div class="empty"><div class="hero">🌿</div>${this._plants.length ? t("All plants are happy. Nothing to do today.") : t("Add plants to get reminders here.")}</div>`
       }`;
   }
 
@@ -729,16 +1079,16 @@ class PlantManagerPanel extends HTMLElement {
     const lang = this._hass.language;
     const format = new Intl.DateTimeFormat(lang || "en", { weekday: "short", day: "numeric", month: "short" });
     const when = plan.active
-      ? `Away until ${format.format(new Date(plan.back))}`
-      : `Away ${format.format(new Date(plan.leave))} – ${format.format(new Date(plan.back))}`;
+      ? t("Away until {date}", { date: format.format(new Date(plan.back)) })
+      : t("Away {start} – {end}", { start: format.format(new Date(plan.leave)), end: format.format(new Date(plan.back)) });
     const visits = plan.visits.length;
     return `
       <div class="banner">
         <span style="font-size:28px">🧳</span>
         <div class="grow"><b>${esc(when)}</b>
-          <div class="meta">${visits ? `${vacation.sitter ? esc(vacation.sitter) : "The plant sitter"} waters ${visits} time${visits === 1 ? "" : "s"}` : "No one needs to water"}</div>
+          <div class="meta">${esc(visits ? tn(visits, "{sitter} waters {n} time", "{sitter} waters {n} times", { sitter: vacation.sitter || t("The plant sitter") }) : t("No one needs to water"))}</div>
         </div>
-        ${this._view !== "vacation" ? `<button class="btn small" data-action="view" data-view="vacation">Plan</button>` : ""}
+        ${this._view !== "vacation" ? `<button class="btn small" data-action="view" data-view="vacation">${t("Plan")}</button>` : ""}
       </div>`;
   }
 
@@ -746,7 +1096,7 @@ class PlantManagerPanel extends HTMLElement {
     const lang = this._hass.language;
     const schedule = this._schedule.filter((event) => event.kind !== "vacation");
     if (!schedule.length) {
-      return `${this._tripBanner()}<div class="empty">Nothing planned for the next four weeks.</div>`;
+      return `${this._tripBanner()}<div class="empty">${t("Nothing planned for the next four weeks.")}</div>`;
     }
     const days = new Map();
     for (const event of schedule) {
@@ -766,14 +1116,14 @@ class PlantManagerPanel extends HTMLElement {
               const plant = this._plantsById[event.plant_id];
               return this._plantRow(
                 plant || { id: event.plant_id, name: event.name },
-                `${KIND_ICONS[event.kind]} ${esc(SCHEDULE_LABELS[event.kind] || human(event.kind))}`,
+                `${KIND_ICONS[event.kind]} ${esc(SCHEDULE_LABELS[event.kind] ? t(SCHEDULE_LABELS[event.kind]) : human(event.kind))}`,
                 ""
               );
             })
             .join("")}</div>`;
       })
       .join("")}
-      <p class="hint">Projected from the current conditions; the schedule adapts to the room climate, the season and your feedback.</p>
+      <p class="hint">${t("Projected from the current conditions; the schedule adapts to the room climate, the season and your feedback.")}</p>
     </div>`;
   }
 
@@ -813,7 +1163,7 @@ class PlantManagerPanel extends HTMLElement {
   _renderVacation() {
     const { vacation, plan } = this._trip || {};
     if (!this._plants.length) {
-      return `<div class="empty"><div class="hero">🧳</div>Add plants first, then plan who waters what while you are away.</div>`;
+      return `<div class="empty"><div class="hero">🧳</div>${t("Add plants first, then plan who waters what while you are away.")}</div>`;
     }
     if (this._tripDraft || !vacation) {
       const preview = this._tripPreview;
@@ -822,18 +1172,18 @@ class PlantManagerPanel extends HTMLElement {
     const lang = this._hass.language;
     const format = new Intl.DateTimeFormat(lang || "en", { weekday: "short", day: "numeric", month: "long" });
     const when = plan.active
-      ? `You're away, back ${relativeDay(plan.back, lang)}`
-      : `Leaving ${relativeDay(plan.leave, lang)}`;
+      ? t("You're away, back {when}", { when: relativeDay(plan.back, lang) })
+      : t("Leaving {when}", { when: relativeDay(plan.leave, lang) });
     return `
       <div class="section">
         <div class="row" style="justify-content:space-between">
           <div>
             <h2 style="margin-bottom:4px">🧳 ${esc(format.format(localDay(vacation.start_date)))} – ${esc(format.format(localDay(vacation.end_date)))}</h2>
-            <div class="muted">${esc(when)}${vacation.sitter ? ` · ${esc(vacation.sitter)} waters` : ""}</div>
+            <div class="muted">${esc(when)}${vacation.sitter ? esc(t(" · {sitter} waters", { sitter: vacation.sitter })) : ""}</div>
           </div>
           <div class="actions-bar">
-            <button class="btn" data-action="edit-trip">Change</button>
-            <button class="btn danger" data-action="end-trip">${plan.active ? "I'm back" : "Cancel vacation"}</button>
+            <button class="btn" data-action="edit-trip">${t("Change")}</button>
+            <button class="btn danger" data-action="end-trip">${plan.active ? t("I'm back") : t("Cancel vacation")}</button>
           </div>
         </div>
       </div>
@@ -845,25 +1195,24 @@ class PlantManagerPanel extends HTMLElement {
     const notify = Object.keys(this._hass.services?.notify || {}).map((name) => `notify.${name}`);
     return `
       <div class="section">
-        <h2>${vacation ? "Change the vacation" : "Plan a vacation"}</h2>
-        <p class="hint" style="margin-top:0">Plant Manager works out which plants to water right before you leave,
-          what to move out of the sun, and on which days someone has to come by.</p>
+        <h2>${vacation ? t("Change the vacation") : t("Plan a vacation")}</h2>
+        <p class="hint" style="margin-top:0">${t("Plant Manager works out which plants to water right before you leave, what to move out of the sun, and on which days someone has to come by.")}</p>
         <div class="form" style="margin-top:12px">
-          ${this._field("Leaving (in the morning)", `<input type="date" data-trip="start_date" value="${esc(d.start_date)}">`)}
-          ${this._field("Back (in the evening)", `<input type="date" data-trip="end_date" value="${esc(d.end_date)}">`)}
-          ${this._field("Plant sitter", `<input data-trip="sitter" value="${esc(d.sitter)}" placeholder="Name (optional)">`)}
+          ${this._field(t("Leaving (in the morning)"), `<input type="date" data-trip="start_date" value="${esc(d.start_date)}">`)}
+          ${this._field(t("Back (in the evening)"), `<input type="date" data-trip="end_date" value="${esc(d.end_date)}">`)}
+          ${this._field(t("Plant sitter"), `<input data-trip="sitter" value="${esc(d.sitter)}" placeholder="${esc(t("Name (optional)"))}">`)}
           ${this._field(
-            "Sitter's notify action",
+            t("Sitter's notify action"),
             `<input data-trip="sitter_notify" list="notify-list" value="${esc(d.sitter_notify)}" placeholder="notify.mobile_app_…">
              <datalist id="notify-list">${notify.map((n) => `<option value="${esc(n)}">`).join("")}</datalist>`
           )}
-          ${this._field("Notes for the sitter", `<textarea data-trip="notes" placeholder="Where the key and the watering can are, …">${esc(d.notes)}</textarea>`, true)}
+          ${this._field(t("Notes for the sitter"), `<textarea data-trip="notes" placeholder="${esc(t("Where the key and the watering can are, …"))}">${esc(d.notes)}</textarea>`, true)}
         </div>
-        <p class="hint">With a notify action, the sitter gets a reminder on the morning of each day they need to come.</p>
+        <p class="hint">${t("With a notify action, the sitter gets a reminder on the morning of each day they need to come.")}</p>
         ${this._tripError ? `<p class="warning medium">${esc(this._tripError)}</p>` : ""}
         <div class="actions-bar" style="margin-top:12px">
-          <button class="btn primary" data-action="save-trip">${vacation ? "Save" : "Save vacation"}</button>
-          ${vacation ? `<button class="btn" data-action="cancel-trip-edit">Cancel</button>` : ""}
+          <button class="btn primary" data-action="save-trip">${vacation ? t("Save") : t("Save vacation")}</button>
+          ${vacation ? `<button class="btn" data-action="cancel-trip-edit">${t("Cancel")}</button>` : ""}
         </div>
       </div>`;
   }
@@ -875,23 +1224,28 @@ class PlantManagerPanel extends HTMLElement {
     const byId = Object.fromEntries(entries.map((e) => [e.plant_id, e]));
     const tips = this._config.vacation_tips || {};
     const dayFormat = new Intl.DateTimeFormat(lang || "en", { weekday: "long", day: "numeric", month: "long" });
-    const plant = (id) => this._plantsById[id] || { id, name: byId[id]?.name || "Plant" };
+    const plant = (id) => this._plantsById[id] || { id, name: byId[id]?.name || t("Plant") };
     const area = (id) => this._areaName(plant(id).area_id);
+    // English tips follow a colon in lower case; German nouns keep their capital.
+    const tipText = (tip) => {
+      const text = tips[tip] || human(tip);
+      return LANG === "en" ? text.charAt(0).toLowerCase() + text.slice(1) : text;
+    };
     const sections = [];
 
     const prepare = plan.active ? [] : plan.prepare;
-    const measured = entries.filter((e) => e.risk !== "ok" && e.tips.some((t) => t !== "sensor"));
+    const measured = entries.filter((e) => e.risk !== "ok" && e.tips.some((tip) => tip !== "sensor"));
     if (prepare.length || measured.length) {
       sections.push(`
-        <div class="section"><h2>Before you leave</h2>
+        <div class="section"><h2>${t("Before you leave")}</h2>
           ${
             prepare.length
-              ? `<h3>Water thoroughly the day before or the morning you leave</h3><div class="list">${prepare
+              ? `<h3>${t("Water thoroughly the day before or the morning you leave")}</h3><div class="list">${prepare
                   .map((id) =>
                     this._plantRow(
                       plant(id),
-                      `${esc(area(id))}${area(id) ? " · " : ""}Last watered ${esc(relativeDay(plant(id).last_watered, lang))}`,
-                      vacation ? `<button class="btn small water" data-action="water" data-id="${id}">💧 Watered</button>` : ""
+                      `${esc(area(id))}${area(id) ? " · " : ""}${esc(plant(id).last_watered ? t("Last watered {when}", { when: relativeDay(plant(id).last_watered, lang) }) : t("Never watered"))}`,
+                      vacation ? `<button class="btn small water" data-action="water" data-id="${id}">${t("💧 Watered")}</button>` : ""
                     )
                   )
                   .join("")}</div>`
@@ -899,14 +1253,14 @@ class PlantManagerPanel extends HTMLElement {
           }
           ${
             measured.length
-              ? `<h3>So they dry out more slowly</h3>${measured
+              ? `<h3>${t("So they dry out more slowly")}</h3>${measured
                   .map(
                     (e) => `<div class="tip">🌤 <b>${esc(e.name)}</b>: ${e.tips
-                      .filter((t) => t !== "sensor")
-                      .map((t) => esc(tips[t] || human(t)).toLowerCase())
+                      .filter((tip) => tip !== "sensor")
+                      .map((tip) => esc(tipText(tip)))
                       .join("; ")}${
                       e.lasts_with_measures_days > e.lasts_days
-                        ? ` <span class="muted">(lasts ${e.lasts_with_measures_days} instead of ${e.lasts_days} days)</span>`
+                        ? ` <span class="muted">${esc(t("(lasts {with} instead of {without} days)", { with: num(e.lasts_with_measures_days), without: num(e.lasts_days) }))}</span>`
                         : ""
                     }</div>`
                   )
@@ -916,11 +1270,12 @@ class PlantManagerPanel extends HTMLElement {
         </div>`);
     }
 
-    const sitterName = vacation?.sitter || "The plant sitter";
+    const sitterName = vacation?.sitter || t("The plant sitter");
+    const visits = plan.visits.length;
     sections.push(`
-      <div class="section"><h2>${plan.visits.length ? `${esc(sitterName)} waters on ${plan.visits.length} day${plan.visits.length === 1 ? "" : "s"}` : "Plant sitter"}</h2>
+      <div class="section"><h2>${esc(visits ? tn(visits, "{sitter} waters on {n} day", "{sitter} waters on {n} days", { sitter: sitterName }) : t("Plant sitter"))}</h2>
         ${
-          plan.visits.length
+          visits
             ? plan.visits
                 .map(
                   (visit) => `
@@ -930,14 +1285,18 @@ class PlantManagerPanel extends HTMLElement {
               .join("")}</div>`
                 )
                 .join("")
-            : `<p class="muted" style="margin-top:0">🎉 No one needs to come: every plant lasts until you are back${prepare.length ? " if you water the ones above before leaving" : ""}.</p>`
+            : `<p class="muted" style="margin-top:0">${
+                prepare.length
+                  ? t("🎉 No one needs to come: every plant lasts until you are back if you water the ones above before leaving.")
+                  : t("🎉 No one needs to come: every plant lasts until you are back.")
+              }</p>`
         }
         ${
-          vacation && plan.visits.length
+          vacation && visits
             ? `<div class="actions-bar" style="margin-top:12px">
-                ${vacation.sitter_notify ? `<button class="btn primary" data-action="send-plan">Send to ${esc(vacation.sitter || "the sitter")}</button>` : ""}
-                <button class="btn" data-action="copy-plan">Copy plan</button>
-                <button class="btn" data-action="print-plan">Print plan</button>
+                ${vacation.sitter_notify ? `<button class="btn primary" data-action="send-plan">${esc(t("Send to {sitter}", { sitter: vacation.sitter || t("the sitter") }))}</button>` : ""}
+                <button class="btn" data-action="copy-plan">${t("Copy plan")}</button>
+                <button class="btn" data-action="print-plan">${t("Print plan")}</button>
               </div>`
             : ""
         }
@@ -945,27 +1304,24 @@ class PlantManagerPanel extends HTMLElement {
 
     const verdict = (e) =>
       e.risk === "ok"
-        ? `<span class="chip ok">Lasts${e.prepare ? " after watering" : ""}</span>`
+        ? `<span class="chip ok">${e.prepare ? t("Lasts after watering") : t("Lasts")}</span>`
         : e.risk === "measures"
-          ? `<span class="chip measures">Lasts if moved</span>`
-          : `<span class="chip sitter">Sitter: ${e.visits.length}×</span>`;
+          ? `<span class="chip measures">${t("Lasts if moved")}</span>`
+          : `<span class="chip sitter">${t("Sitter: {n}×", { n: e.visits.length })}</span>`;
     sections.push(`
-      <div class="section"><h2>All plants</h2>
+      <div class="section"><h2>${t("All plants")}</h2>
         <table>
-          <tr><th>Plant</th><th class="num">Water lasts</th><th>While away</th></tr>
+          <tr><th>${t("Plant")}</th><th class="num">${t("Water lasts")}</th><th>${t("While away")}</th></tr>
           ${entries
             .map(
               (e) => `<tr>
                 <td><button class="link" data-action="open-plant" data-id="${e.plant_id}" style="padding:0">${esc(e.name)}</button></td>
-                <td class="num">${e.lasts_days} d</td>
+                <td class="num">${t("{n} d", { n: num(e.lasts_days) })}</td>
                 <td>${verdict(e)}</td></tr>`
             )
             .join("")}
         </table>
-        <p class="hint">Projected for ${plan.days} days away with today's room climate and the season mid-trip. Turning the
-          heating down or the air conditioning off changes how fast the soil dries. Nobody to water? A wick from a jug of
-          water, a self-watering spike, or a bathtub with a few centimetres of water on a towel keeps most potted plants
-          going for one or two weeks.</p>
+        <p class="hint">${t("Projected for {days} days away with today's room climate and the season mid-trip. Turning the heating down or the air conditioning off changes how fast the soil dries. Nobody to water? A wick from a jug of water, a self-watering spike, or a bathtub with a few centimetres of water on a towel keeps most potted plants going for one or two weeks.", { days: num(plan.days) })}</p>
       </div>`);
     return sections.join("");
   }
@@ -976,14 +1332,14 @@ class PlantManagerPanel extends HTMLElement {
     const lang = this._hass.language;
     const dayFormat = new Intl.DateTimeFormat(lang || "en", { weekday: "long", day: "numeric", month: "long" });
     const plant = (id) => this._plantsById[id] || { name: id };
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Plant care</title>
+    const html = `<!doctype html><html lang="${LANG}"><head><meta charset="utf-8"><title>${esc(t("Plant care"))}</title>
       <style>body{font-family:system-ui,sans-serif;max-width:720px;margin:24px auto;padding:0 16px;color:#222}
       h1{font-size:22px} h2{font-size:17px;margin:20px 0 6px;border-bottom:1px solid #ccc;padding-bottom:4px}
       li{margin:6px 0;display:flex;gap:10px;align-items:center} img{width:48px;height:48px;object-fit:cover;border-radius:6px}
       ul{list-style:none;padding:0} .muted{color:#666;font-size:13px} .box{width:16px;height:16px;border:1px solid #444;flex:none}
       pre{white-space:pre-wrap;font:inherit}</style></head><body>
       <h1>🪴 ${esc(text.split("\n")[0].replace(/^🪴\s*/, ""))}</h1>
-      ${vacation.sitter ? `<p>Thank you, ${esc(vacation.sitter)}!</p>` : ""}
+      ${vacation.sitter ? `<p>${esc(t("Thank you, {sitter}!", { sitter: vacation.sitter }))}</p>` : ""}
       ${plan.visits
         .map(
           (visit) => `<h2>${esc(dayFormat.format(localDay(visit.date)))}</h2><ul>${visit.plant_ids
@@ -995,13 +1351,13 @@ class PlantManagerPanel extends HTMLElement {
             .join("")}</ul>`
         )
         .join("")}
-      <h2>How to water</h2>
-      <p>Water slowly until it runs out at the bottom, then empty the saucer after 15 minutes. If the soil is still moist 2 cm deep, skip it.</p>
-      ${vacation.notes ? `<h2>Notes</h2><pre>${esc(vacation.notes)}</pre>` : ""}
+      <h2>${t("How to water")}</h2>
+      <p>${t("Water slowly until it runs out at the bottom, then empty the saucer after 15 minutes. If the soil is still moist 2 cm deep, skip it.")}</p>
+      ${vacation.notes ? `<h2>${t("Notes")}</h2><pre>${esc(vacation.notes)}</pre>` : ""}
       <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script></body></html>`;
     const win = window.open("", "_blank");
     if (!win) {
-      this._toast("Allow pop-ups to print the plan");
+      this._toast(t("Allow pop-ups to print the plan"));
       return;
     }
     win.document.write(html);
@@ -1040,32 +1396,31 @@ class PlantManagerPanel extends HTMLElement {
         <div class="dialog" style="max-width:560px">
           <div class="dialog-head">
             <button class="btn" data-action="close-notify">✕</button>
-            <h2>My notifications</h2>
-            <button class="btn primary" data-action="save-notify">Save</button>
+            <h2>${t("My notifications")}</h2>
+            <button class="btn primary" data-action="save-notify">${t("Save")}</button>
           </div>
           <div class="dialog-body">
             <div class="section">
-              <h2>Send to</h2>
+              <h2>${t("Send to")}</h2>
               ${
                 all.length
                   ? all
                       .map(
                         (p) => `<label class="field check"><input type="checkbox" data-notify-target="${esc(p.service)}" ${draft.targets.includes(p.service) ? "checked" : ""}>
-                          📱 ${esc(p.name)}${p.mine ? "" : ` <span class="muted">(someone else's)</span>`}</label>`
+                          📱 ${esc(p.name)}${p.mine ? "" : ` <span class="muted">${t("(someone else's)")}</span>`}</label>`
                       )
                       .join("")
-                  : `<p class="muted" style="margin-top:0">No phones yet. Install the Home Assistant app on your phone and log in to this Home Assistant; the phone then shows up here.</p>`
+                  : `<p class="muted" style="margin-top:0">${t("No phones yet. Install the Home Assistant app on your phone and log in to this Home Assistant; the phone then shows up here.")}</p>`
               }
             </div>
             <div class="section">
-              <h2>What</h2>
-              <label class="field check"><input type="checkbox" data-notify="daily" ${draft.daily ? "checked" : ""}> Daily summary: what to water and fertilize</label>
-              <label class="field" style="max-width:220px;margin:4px 0 12px 28px">At <input type="time" data-notify="time" value="${esc(draft.time.slice(0, 5))}"></label>
-              <label class="field check"><input type="checkbox" data-notify="problems" ${draft.problems ? "checked" : ""}> Problems right away (too cold, too dark, soil too wet, …)</label>
-              <p class="hint">The summary is only sent on days with something to do; while you are on vacation it says what the plant
-                sitter waters. These settings are only for you${user ? ` (${esc(user)})` : ""}; everyone can choose their own.</p>
+              <h2>${t("What")}</h2>
+              <label class="field check"><input type="checkbox" data-notify="daily" ${draft.daily ? "checked" : ""}> ${t("Daily summary: what to water and fertilize")}</label>
+              <label class="field" style="max-width:220px;margin:4px 0 12px 28px">${t("At")} <input type="time" data-notify="time" value="${esc(draft.time.slice(0, 5))}"></label>
+              <label class="field check"><input type="checkbox" data-notify="problems" ${draft.problems ? "checked" : ""}> ${t("Problems right away (too cold, too dark, soil too wet, …)")}</label>
+              <p class="hint">${t("The summary is only sent on days with something to do; while you are on vacation it says what the plant sitter waters. These settings are only for you{user}; everyone can choose their own.", { user: user ? ` (${esc(user)})` : "" })}</p>
               <div class="actions-bar" style="margin-top:12px">
-                <button class="btn" data-action="test-notify" ${draft.targets.length ? "" : "disabled"}>Save and send a test</button>
+                <button class="btn" data-action="test-notify" ${draft.targets.length ? "" : "disabled"}>${t("Save and send a test")}</button>
               </div>
             </div>
           </div>
@@ -1116,7 +1471,7 @@ class PlantManagerPanel extends HTMLElement {
       try {
         plant = await this._ws("plants/get", { plant_id: plantId });
       } catch (err) {
-        this._toast(`Could not load plant: ${err.message}`);
+        this._toast(t("Could not load plant: {error}", { error: err.message }));
         return;
       }
     }
@@ -1175,8 +1530,8 @@ class PlantManagerPanel extends HTMLElement {
         <div class="dialog">
           <div class="dialog-head">
             <button class="btn" data-action="close-editor">✕</button>
-            <h2>${esc(editor.draft.name || editor.plant?.name || "New plant")}</h2>
-            <button class="btn primary" data-action="save-plant" ${editor.busy ? "disabled" : ""}>${editor.busy ? "Saving…" : "Save"}</button>
+            <h2>${esc(editor.draft.name || editor.plant?.name || t("New plant"))}</h2>
+            <button class="btn primary" data-action="save-plant" ${editor.busy ? "disabled" : ""}>${editor.busy ? t("Saving…") : t("Save")}</button>
           </div>
           <div class="dialog-body">
             <div class="section" id="ed-identify"></div>
@@ -1213,11 +1568,11 @@ class PlantManagerPanel extends HTMLElement {
     const editor = this._editor;
     const provider = PROVIDER_LABELS[this._config.provider];
     const intro = this._config.identification
-      ? `Take a photo of the plant (leaves in view) and ${esc(provider)} suggests what it is.`
-      : `Add a photo. To identify plants from photos, choose a service under <b>Settings → Devices & services → Plant Manager → Configure</b>.`;
+      ? t("Take a photo of the plant (leaves in view) and {provider} suggests what it is.", { provider: esc(t(provider || "")) })
+      : t("Add a photo. To identify plants from photos, choose a service under <b>Settings → Devices & services → Plant Manager → Configure</b>.");
     let body = "";
     if (editor.identifying) {
-      body = `<p class="muted">Identifying…</p>`;
+      body = `<p class="muted">${t("Identifying…")}</p>`;
     } else if (editor.candidates?.length) {
       body = `<div class="candidates">${editor.candidates
         .map(
@@ -1226,11 +1581,11 @@ class PlantManagerPanel extends HTMLElement {
             <span class="species"><b>${esc(c.scientific_name)}</b></span>
             <span class="muted">${esc(c.common_names?.[0] || c.family || "")}</span>
             <div class="score"><div style="width:${Math.round(c.score * 100)}%"></div></div>
-            <span class="muted">${Math.round(c.score * 100)} % match</span>
+            <span class="muted">${t("{n} % match", { n: Math.round(c.score * 100) })}</span>
           </button>`
         )
         .join("")}</div>
-        <p class="hint">Pick the right one, or type the species below if none fits.</p>`;
+        <p class="hint">${t("Pick the right one, or type the species below if none fits.")}</p>`;
     } else if (editor.identifyError && editor.identifyError !== "no_provider") {
       const messages = {
         no_match: "The plant could not be identified. Try a closer photo of the leaves, or enter the species below.",
@@ -1239,14 +1594,14 @@ class PlantManagerPanel extends HTMLElement {
         cannot_connect: "Could not reach the identification service.",
         not_a_plant: "No plant was recognised in this photo.",
       };
-      body = `<p class="warning medium">${esc(messages[editor.identifyError] || "Identification failed. Check the logs.")}</p>`;
+      body = `<p class="warning medium">${esc(t(messages[editor.identifyError] || "Identification failed. Check the logs."))}</p>`;
     }
     return `
-      <h2>${editor.id ? "Identify again" : "Identify"}</h2>
+      <h2>${editor.id ? t("Identify again") : t("Identify")}</h2>
       <p class="hint" style="margin-top:0">${intro}</p>
       <div class="actions-bar" style="margin-top:12px">
-        <label class="btn primary">📷 Take photo<input type="file" accept="image/*" capture="environment" data-identify hidden></label>
-        <label class="btn">⬆ Upload<input type="file" accept="image/*" data-identify hidden></label>
+        <label class="btn primary">${t("📷 Take photo")}<input type="file" accept="image/*" capture="environment" data-identify hidden></label>
+        <label class="btn">${t("⬆ Upload")}<input type="file" accept="image/*" data-identify hidden></label>
       </div>
       ${body}`;
   }
@@ -1261,39 +1616,39 @@ class PlantManagerPanel extends HTMLElement {
       .filter(([, value]) => Math.abs(value - 1) > 0.005)
       .map(
         ([key, value]) =>
-          `<tr><td>${esc(FACTOR_LABELS[key] || human(key))}</td><td class="num">× ${value.toFixed(2)}</td><td class="muted">${value > 1 ? "waters less often" : "waters more often"}</td></tr>`
+          `<tr><td>${esc(FACTOR_LABELS[key] ? t(FACTOR_LABELS[key]) : human(key))}</td><td class="num">× ${num(value, 2)}</td><td class="muted">${value > 1 ? t("waters less often") : t("waters more often")}</td></tr>`
       )
       .join("");
     const problems = (care.problems || []).map((p) => this._config.problems[p]).filter(Boolean);
     return `
       <div class="section">
-        <h2>Care</h2>
+        <h2>${t("Care")}</h2>
         <div class="facts">
-          <div class="fact"><div class="muted">Next watering</div><div class="value">${esc(dueText(care, lang))}</div></div>
-          <div class="fact"><div class="muted">Every</div><div class="value">${care.interval_days.toFixed(1)} days</div></div>
-          <div class="fact"><div class="muted">Water left</div><div class="value">${Math.round(care.water_reserve)} %</div></div>
-          <div class="fact"><div class="muted">Last watered</div><div class="value">${esc(relativeDay(plant.last_watered, lang))}</div></div>
+          <div class="fact"><div class="muted">${t("Next watering")}</div><div class="value">${esc(dueText(care, lang))}</div></div>
+          <div class="fact"><div class="muted">${t("Every")}</div><div class="value">${t("{n} days", { n: num(care.interval_days) })}</div></div>
+          <div class="fact"><div class="muted">${t("Water left")}</div><div class="value">${Math.round(care.water_reserve)} %</div></div>
+          <div class="fact"><div class="muted">${t("Last watered")}</div><div class="value">${esc(relativeDay(plant.last_watered, lang))}</div></div>
         </div>
         ${this._reserveBar(care)}
         ${problems.length ? `<p class="warning medium">⚠ ${esc(problems.join(", "))}</p>` : ""}
         <div class="actions-bar" style="margin-top:12px">
-          <button class="btn water" data-action="water" data-id="${plant.id}">💧 Watered</button>
-          <select data-water-feedback aria-label="Soil before watering">
-            <option value="">Soil before watering…</option>
+          <button class="btn water" data-action="water" data-id="${plant.id}">${t("💧 Watered")}</button>
+          <select data-water-feedback aria-label="${t("Soil before watering")}">
+            <option value="">${t("Soil before watering…")}</option>
             ${this._options(this._config.feedback, "", { label: (v) => human(v).replace(/^./, (c) => c.toUpperCase()) })}
           </select>
-          <button class="btn" data-action="snooze" data-id="${plant.id}">Still moist</button>
-          <button class="btn" data-action="log" data-kind="fertilize" data-id="${plant.id}">🌱 Fertilized</button>
+          <button class="btn" data-action="snooze" data-id="${plant.id}">${t("Still moist")}</button>
+          <button class="btn" data-action="log" data-kind="fertilize" data-id="${plant.id}">${t("🌱 Fertilized")}</button>
         </div>
         ${
           factors
-            ? `<h3>Why every ${care.interval_days.toFixed(1)} days</h3>
-               <table><tr><td>Reference interval for the species</td><td class="num">${esc(plant.profile?.base_interval_days ?? "")} d</td><td></td></tr>${factors}</table>`
+            ? `<h3>${t("Why every {n} days", { n: num(care.interval_days) })}</h3>
+               <table><tr><td>${t("Reference interval for the species")}</td><td class="num">${esc(t("{n} d", { n: plant.profile?.base_interval_days ?? "" }))}</td><td></td></tr>${factors}</table>`
             : ""
         }
         <p class="hint">
-          ${care.temperature != null ? `${care.temperature.toFixed(1)} °C · ` : ""}${care.humidity != null ? `${Math.round(care.humidity)} % humidity · ` : ""}${care.moisture != null ? `soil ${Math.round(care.moisture)} % · ` : ""}
-          ${care.next_fertilization ? (care.fertilizing_paused ? "fertilizing rests in winter" : `fertilize ${esc(relativeDay(care.next_fertilization, lang))}`) : "no fertilizing"}
+          ${care.temperature != null ? `${num(care.temperature)} °C · ` : ""}${care.humidity != null ? `${t("{n} % humidity", { n: Math.round(care.humidity) })} · ` : ""}${care.moisture != null ? `${t("soil {n} %", { n: Math.round(care.moisture) })} · ` : ""}
+          ${care.next_fertilization ? (care.fertilizing_paused ? t("fertilizing rests in winter") : esc(t("fertilize {when}", { when: relativeDay(care.next_fertilization, lang) }))) : t("no fertilizing")}
           · ID <code>${esc(plant.id)}</code>
         </p>
       </div>`;
@@ -1305,10 +1660,10 @@ class PlantManagerPanel extends HTMLElement {
     const tiles = photos.map(
       (photo, index) => `
         <div class="photo">
-          <div class="thumb"><img src="${esc(photo.url)}" alt="">${index === 0 ? `<span class="cover-badge">Cover</span>` : ""}</div>
+          <div class="thumb"><img src="${esc(photo.url)}" alt="">${index === 0 ? `<span class="cover-badge">${t("Cover")}</span>` : ""}</div>
           <div class="actions">
-            ${index ? `<button class="link" data-action="cover-photo" data-id="${photo.id}">Make cover</button>` : "<span></span>"}
-            <button class="link" data-action="delete-photo" data-id="${photo.id}">Delete</button>
+            ${index ? `<button class="link" data-action="cover-photo" data-id="${photo.id}">${t("Make cover")}</button>` : "<span></span>"}
+            <button class="link" data-action="delete-photo" data-id="${photo.id}">${t("Delete")}</button>
           </div>
         </div>`
     );
@@ -1320,17 +1675,17 @@ class PlantManagerPanel extends HTMLElement {
         tiles.push(`
           <div class="photo pending">
             <div class="thumb"><img src="${esc(file.preview)}" alt=""></div>
-            <div class="actions"><span class="muted">On save</span>
-              <button class="link" data-action="${action}" data-index="${index}">Remove</button></div>
+            <div class="actions"><span class="muted">${t("On save")}</span>
+              <button class="link" data-action="${action}" data-index="${index}">${t("Remove")}</button></div>
           </div>`)
       );
     }
     return `
-      <h2>Photos</h2>
-      ${tiles.length ? `<div class="photos">${tiles.join("")}</div>` : `<p class="muted" style="margin-top:0">No photos yet.</p>`}
+      <h2>${t("Photos")}</h2>
+      ${tiles.length ? `<div class="photos">${tiles.join("")}</div>` : `<p class="muted" style="margin-top:0">${t("No photos yet.")}</p>`}
       <div class="actions-bar" style="margin-top:12px">
-        <label class="btn">📷 Take photo<input type="file" accept="image/*" capture="environment" data-upload hidden></label>
-        <label class="btn">⬆ Upload<input type="file" accept="image/*" multiple data-upload hidden></label>
+        <label class="btn">${t("📷 Take photo")}<input type="file" accept="image/*" capture="environment" data-upload hidden></label>
+        <label class="btn">${t("⬆ Upload")}<input type="file" accept="image/*" multiple data-upload hidden></label>
       </div>`;
   }
 
@@ -1343,28 +1698,28 @@ class PlantManagerPanel extends HTMLElement {
     const isNew = !this._editor.id;
     const areas = this._areas();
     return `
-      <h2>Details</h2>
+      <h2>${t("Details")}</h2>
       <div class="form">
-        ${this._field("Name", `<input data-field="name" value="${esc(d.name)}" placeholder="e.g. Monty">`)}
+        ${this._field(t("Name"), `<input data-field="name" value="${esc(d.name)}" placeholder="${esc(t("e.g. Monty"))}">`)}
         ${this._field(
-          "Species",
-          `<input data-field="species" list="species-list" value="${esc(d.species)}" placeholder="e.g. Monstera deliciosa">
+          t("Species"),
+          `<input data-field="species" list="species-list" value="${esc(d.species)}" placeholder="${esc(t("e.g. Monstera deliciosa"))}">
            <datalist id="species-list">${this._config.species.map((s) => `<option value="${esc(s.value)}">${esc(s.label)}</option>`).join("")}</datalist>`
         )}
-        ${this._field("Common name", `<input data-field="common_name" value="${esc(d.common_name)}">`)}
+        ${this._field(t("Common name"), `<input data-field="common_name" value="${esc(d.common_name)}">`)}
         ${this._field(
-          "Area",
+          t("Area"),
           areas.length
-            ? `<select data-field="area_id">${this._options(areas.map((a) => a.area_id), d.area_id, { empty: "None", label: (id) => this._areaName(id) })}</select>`
-            : `<select data-field="area_id" disabled><option>No areas set up</option></select>`
+            ? `<select data-field="area_id">${this._options(areas.map((a) => a.area_id), d.area_id, { empty: t("None"), label: (id) => this._areaName(id) })}</select>`
+            : `<select data-field="area_id" disabled><option>${t("No areas set up")}</option></select>`
         )}
-        ${this._field("Location", `<select data-field="placement">${this._options(this._config.placements, d.placement)}</select>`)}
-        ${this._field("Light at its spot", `<select data-field="light">${this._options(this._config.light_levels, d.light)}</select>`)}
-        ${this._field("Pot diameter (cm)", `<input type="number" min="2" max="300" step="1" data-field="pot_diameter_cm" data-kind="float" value="${esc(d.pot_diameter_cm)}">`)}
-        ${this._field("Pot type", `<select data-field="pot_material">${this._options(this._config.pot_materials, d.pot_material)}</select>`)}
-        ${isNew ? this._field("Last watered", `<input type="date" data-field="last_watered" value="${esc(d.last_watered)}">`) : ""}
-        ${this._field("Got it on", `<input type="date" data-field="acquired_date" value="${esc(d.acquired_date || "")}">`)}
-        ${this._field("Notes", `<textarea data-field="notes">${esc(d.notes || "")}</textarea>`, true)}
+        ${this._field(t("Location"), `<select data-field="placement">${this._options(this._config.placements, d.placement)}</select>`)}
+        ${this._field(t("Light at its spot"), `<select data-field="light">${this._options(this._config.light_levels, d.light)}</select>`)}
+        ${this._field(t("Pot diameter (cm)"), `<input type="number" min="2" max="300" step="1" data-field="pot_diameter_cm" data-kind="float" value="${esc(d.pot_diameter_cm)}">`)}
+        ${this._field(t("Pot type"), `<select data-field="pot_material">${this._options(this._config.pot_materials, d.pot_material)}</select>`)}
+        ${isNew ? this._field(t("Last watered"), `<input type="date" data-field="last_watered" value="${esc(d.last_watered)}">`) : ""}
+        ${this._field(t("Got it on"), `<input type="date" data-field="acquired_date" value="${esc(d.acquired_date || "")}">`)}
+        ${this._field(t("Notes"), `<textarea data-field="notes">${esc(d.notes || "")}</textarea>`, true)}
       </div>`;
   }
 
@@ -1381,7 +1736,7 @@ class PlantManagerPanel extends HTMLElement {
       states.map((s) => s.entity_id),
       selected,
       {
-        empty: "None",
+        empty: t("None"),
         label: (id) => {
           const state = this._hass.states[id];
           const value = state ? ` (${state.state}${state.attributes.unit_of_measurement ? ` ${state.attributes.unit_of_measurement}` : ""})` : "";
@@ -1394,15 +1749,15 @@ class PlantManagerPanel extends HTMLElement {
   _editorSensors() {
     const d = this._editor.draft;
     return `
-      <h2>Sensors</h2>
+      <h2>${t("Sensors")}</h2>
       <div class="form">
         ${Object.entries(this._config.sensor_fields)
           .map(([field, deviceClass]) =>
-            this._field(SENSOR_LABELS[field], `<select data-field="${field}">${this._sensorOptions(deviceClass, d[field])}</select>`)
+            this._field(t(SENSOR_LABELS[field]), `<select data-field="${field}">${this._sensorOptions(deviceClass, d[field])}</select>`)
           )
           .join("")}
       </div>
-      <p class="hint">Room temperature and humidity tune the watering interval (warm, dry air dries the soil faster). A soil moisture sensor replaces the estimate and detects waterings by itself. Light is used to warn when the spot is too dark or too bright.</p>`;
+      <p class="hint">${t("Room temperature and humidity tune the watering interval (warm, dry air dries the soil faster). A soil moisture sensor replaces the estimate and detects waterings by itself. Light is used to warn when the spot is too dark or too bright.")}</p>`;
   }
 
   _editorProfile() {
@@ -1411,23 +1766,23 @@ class PlantManagerPanel extends HTMLElement {
     const sources = editor.draft.profile_sources || [];
     const toxic = profile.toxic_to_pets;
     return `
-      <h2>Care profile</h2>
-      ${editor.resolving ? `<p class="muted">Looking up care for ${esc(editor.draft.species)}…</p>` : ""}
+      <h2>${t("Care profile")}</h2>
+      ${editor.resolving ? `<p class="muted">${esc(t("Looking up care for {species}…", { species: editor.draft.species }))}</p>` : ""}
       ${profile.notes ? `<p style="margin-top:0">💡 ${esc(profile.notes)}</p>` : ""}
       <p class="hint" style="margin-top:0">
-        ${sources.length ? `From ${esc(sources.join(", "))}. ` : ""}
-        ${profile.light_preference ? `Prefers ${esc(human(profile.light_preference).toLowerCase())} light. ` : ""}
-        ${toxic === true ? "⚠ Toxic to pets. " : toxic === false ? "Safe for pets. " : ""}
+        ${sources.length ? `${esc(t("From {sources}.", { sources: sources.map(sourceLabel).join(", ") }))} ` : ""}
+        ${profile.light_preference ? `${esc(t("Prefers {light} light.", { light: LANG === "en" ? human(profile.light_preference).toLowerCase() : human(profile.light_preference) }))} ` : ""}
+        ${toxic === true ? `${t("⚠ Toxic to pets.")} ` : toxic === false ? `${t("Safe for pets.")} ` : ""}
       </p>
       <div class="form">
         ${PROFILE_FIELDS.map(([key, label, step]) =>
-          this._field(label, `<input type="number" step="${step}" data-profile="${key}" value="${esc(profile[key] ?? "")}">`)
+          this._field(t(label), `<input type="number" step="${step}" data-profile="${key}" value="${esc(profile[key] ?? "")}">`)
         ).join("")}
-        <label class="field check"><input type="checkbox" data-profile="winter_dormancy" ${profile.winter_dormancy !== false ? "checked" : ""}> Rests in winter (waters much less, no fertilizer)</label>
+        <label class="field check"><input type="checkbox" data-profile="winter_dormancy" ${profile.winter_dormancy !== false ? "checked" : ""}> ${t("Rests in winter (waters much less, no fertilizer)")}</label>
       </div>
-      <p class="hint">The reference interval is for a 15 cm plastic pot, medium light, 21 °C and 50 % humidity in summer. Pot, light, room climate and season are applied on top.</p>
+      <p class="hint">${t("The reference interval is for a 15 cm plastic pot, medium light, 21 °C and 50 % humidity in summer. Pot, light, room climate and season are applied on top.")}</p>
       <div class="actions-bar" style="margin-top:8px">
-        <button class="btn" data-action="resolve-profile" ${editor.draft.species ? "" : "disabled"}>Look up care for the species again</button>
+        <button class="btn" data-action="resolve-profile" ${editor.draft.species ? "" : "disabled"}>${t("Look up care for the species again")}</button>
       </div>`;
   }
 
@@ -1439,11 +1794,11 @@ class PlantManagerPanel extends HTMLElement {
     const when = new Intl.DateTimeFormat(lang || "en", { dateStyle: "medium", timeStyle: "short" });
     return `
       <div class="section">
-        <h2>Care log</h2>
+        <h2>${t("Care log")}</h2>
         <div class="actions-bar">
           <select data-log-kind>${this._options(this._config.care_kinds.filter((k) => !["water", "snooze"].includes(k)), "fertilize")}</select>
-          <input data-log-notes placeholder="Notes (optional)" style="flex:1 1 180px">
-          <button class="btn" data-action="add-log">Add</button>
+          <input data-log-notes placeholder="${esc(t("Notes (optional)"))}" style="flex:1 1 180px">
+          <button class="btn" data-action="add-log">${t("Add")}</button>
         </div>
         ${
           events.length
@@ -1453,18 +1808,18 @@ class PlantManagerPanel extends HTMLElement {
               <div class="list-row">
                 <span style="font-size:20px">${KIND_ICONS[event.kind] || "•"}</span>
                 <div class="grow">
-                  <div>${esc(human(event.kind))}${event.feedback ? ` <span class="muted">(${esc(human(event.feedback))})</span>` : ""}${event.source === "sensor" ? ` <span class="muted">(detected by the moisture sensor)</span>` : ""}</div>
+                  <div>${esc(human(event.kind))}${event.feedback ? ` <span class="muted">(${esc(human(event.feedback))})</span>` : ""}${event.source === "sensor" ? ` <span class="muted">${t("(detected by the moisture sensor)")}</span>` : ""}</div>
                   <div class="meta">${esc(when.format(new Date(event.at)))}${event.notes ? ` · ${esc(event.notes)}` : ""}</div>
                 </div>
-                <button class="link" data-action="delete-event" data-id="${event.id}">Remove</button>
+                <button class="link" data-action="delete-event" data-id="${event.id}">${t("Remove")}</button>
               </div>`
                 )
                 .join("")}</div>`
-            : `<p class="muted">Nothing logged yet.</p>`
+            : `<p class="muted">${t("Nothing logged yet.")}</p>`
         }
       </div>
       <div class="section">
-        <button class="btn danger" data-action="delete-plant">Delete plant</button>
+        <button class="btn danger" data-action="delete-plant">${t("Delete plant")}</button>
       </div>`;
   }
 
@@ -1496,11 +1851,11 @@ class PlantManagerPanel extends HTMLElement {
     const editor = this._editor;
     const payload = this._payload();
     if (!payload.name) {
-      this._toast("Please enter a name");
+      this._toast(t("Please enter a name"));
       return;
     }
     if (!payload.species && !Object.keys(payload.profile).length) {
-      this._toast("Please enter the species, or take a photo to identify it");
+      this._toast(t("Please enter the species, or take a photo to identify it"));
       return;
     }
     editor.busy = true;
@@ -1525,12 +1880,16 @@ class PlantManagerPanel extends HTMLElement {
           failures.push(err.message);
         }
       }
-      this._toast(failures.length ? `Saved, but ${failures.length} photo(s) failed: ${failures[0]}` : `Saved ${plant.name}`);
+      this._toast(
+        failures.length
+          ? t("Saved, but {n} photo(s) failed: {error}", { n: failures.length, error: failures[0] })
+          : t("Saved {name}", { name: plant.name })
+      );
       this._closeEditor();
     } catch (err) {
       editor.busy = false;
       this._renderEditor();
-      this._toast(`Could not save: ${err.message}`);
+      this._toast(t("Could not save: {error}", { error: err.message }));
     }
   }
 
@@ -1541,7 +1900,8 @@ class PlantManagerPanel extends HTMLElement {
   async _post(url, blob, filename = "photo.jpg") {
     const form = new FormData();
     form.append("file", blob, filename);
-    const response = await this._hass.fetchWithAuth(url, { method: "POST", body: form });
+    const query = `${url.includes("?") ? "&" : "?"}language=${LANG}`;
+    const response = await this._hass.fetchWithAuth(url + query, { method: "POST", body: form });
     if (!response.ok) {
       let message = `HTTP ${response.status}`;
       try {
@@ -1583,7 +1943,7 @@ class PlantManagerPanel extends HTMLElement {
       editor.chosen = null;
       if (result.candidates.length && !editor.touched.has("species")) await this._choose(0);
     } catch (err) {
-      this._toast(`Upload failed: ${err.message}`);
+      this._toast(t("Upload failed: {error}", { error: err.message }));
     }
     editor.identifying = false;
     this._renderEditorPart("identify");
@@ -1624,7 +1984,7 @@ class PlantManagerPanel extends HTMLElement {
         this._updateTitle();
       }
     } catch (err) {
-      this._toast(`Could not look up the care profile: ${err.message}`);
+      this._toast(t("Could not look up the care profile: {error}", { error: err.message }));
     }
     editor.resolving = false;
     this._renderEditorPart("profile");
@@ -1632,7 +1992,7 @@ class PlantManagerPanel extends HTMLElement {
 
   _updateTitle() {
     const title = this.shadowRoot.querySelector(".dialog-head h2");
-    if (title) title.textContent = this._editor?.draft.name || "New plant";
+    if (title) title.textContent = this._editor?.draft.name || t("New plant");
   }
 
   async _handleFiles(files) {
@@ -1644,7 +2004,7 @@ class PlantManagerPanel extends HTMLElement {
         try {
           await this._upload(editor.id, blob);
         } catch (err) {
-          this._toast(`Upload failed: ${err.message}`);
+          this._toast(t("Upload failed: {error}", { error: err.message }));
         }
       } else {
         editor.pendingFiles.push({ blob, preview: URL.createObjectURL(blob) });
@@ -1657,12 +2017,12 @@ class PlantManagerPanel extends HTMLElement {
   // -- events ------------------------------------------------------------
 
   _undoToast(message, undoId) {
-    this._toast(message, "Undo", () =>
+    this._toast(message, t("Undo"), () =>
       this._run(
         this._ws("undo", { undo_id: undoId }).then((result) => {
-          if (!result.undone) throw new Error("Too late to undo");
+          if (!result.undone) throw new Error(t("Too late to undo"));
         }),
-        "Undone"
+        t("Undone")
       )
     );
   }
@@ -1698,7 +2058,7 @@ class PlantManagerPanel extends HTMLElement {
   }
 
   _plantName(id) {
-    return this._plantsById?.[id]?.name || this._editor?.draft.name || "Plant";
+    return this._plantsById?.[id]?.name || this._editor?.draft.name || t("Plant");
   }
 
   async _onClick(ev) {
@@ -1736,27 +2096,27 @@ class PlantManagerPanel extends HTMLElement {
         const select = this.shadowRoot.querySelector("[data-water-feedback]");
         const feedback = el.dataset.feedback || (editor && select?.value) || null;
         const result = await this._run(this._ws("plants/water", { plant_id: el.dataset.id, feedback }));
-        if (result) this._undoToast(`${this._plantName(el.dataset.id)} watered`, result.undo_id);
+        if (result) this._undoToast(t("{name} watered", { name: this._plantName(el.dataset.id) }), result.undo_id);
         break;
       }
       case "snooze": {
         const result = await this._run(this._ws("plants/snooze", { plant_id: el.dataset.id }));
-        if (result) this._undoToast(`OK, ${this._plantName(el.dataset.id)} is reminded a bit later`, result.undo_id);
+        if (result) this._undoToast(t("OK, {name} is reminded a bit later", { name: this._plantName(el.dataset.id) }), result.undo_id);
         break;
       }
       case "log": {
         const result = await this._run(this._ws("plants/log", { plant_id: el.dataset.id, kind: el.dataset.kind }));
-        if (result) this._undoToast(`${this._plantName(el.dataset.id)}: ${human(el.dataset.kind).toLowerCase()}`, result.undo_id);
+        if (result) this._undoToast(`${this._plantName(el.dataset.id)}: ${LANG === "en" ? human(el.dataset.kind).toLowerCase() : human(el.dataset.kind)}`, result.undo_id);
         break;
       }
       case "add-log": {
         const kind = this.shadowRoot.querySelector("[data-log-kind]").value;
         const notes = this.shadowRoot.querySelector("[data-log-notes]").value.trim() || null;
-        await this._run(this._ws("plants/log", { plant_id: editor.id, kind, notes }), "Logged");
+        await this._run(this._ws("plants/log", { plant_id: editor.id, kind, notes }), t("Logged"));
         break;
       }
       case "delete-event":
-        await this._run(this._ws("events/delete", { event_id: Number(el.dataset.id) }), "Removed");
+        await this._run(this._ws("events/delete", { event_id: Number(el.dataset.id) }), t("Removed"));
         break;
       case "choose":
         this._choose(Number(el.dataset.index));
@@ -1777,7 +2137,7 @@ class PlantManagerPanel extends HTMLElement {
         break;
       }
       case "delete-photo":
-        await this._run(this._ws("photos/delete", { photo_id: el.dataset.id }), "Photo deleted");
+        await this._run(this._ws("photos/delete", { photo_id: el.dataset.id }), t("Photo deleted"));
         break;
       case "cover-photo": {
         const ids = editor.plant.photos.map((photo) => photo.id);
@@ -1795,13 +2155,13 @@ class PlantManagerPanel extends HTMLElement {
         this._closeNotify();
         break;
       case "save-notify":
-        if (await this._run(this._saveNotify(), "Notifications saved")) this._closeNotify();
+        if (await this._run(this._saveNotify(), t("Notifications saved"))) this._closeNotify();
         break;
       case "test-notify": {
         const saved = await this._run(this._saveNotify());
         if (!saved) break;
         const result = await this._run(this._ws("notifications/test"));
-        if (result) this._toast(`Test sent to ${result.sent} phone${result.sent === 1 ? "" : "s"}`);
+        if (result) this._toast(tn(result.sent, "Test sent to {n} phone", "Test sent to {n} phones"));
         this._renderNotify();
         break;
       }
@@ -1855,7 +2215,7 @@ class PlantManagerPanel extends HTMLElement {
           this._tripDraft = null;
           this._tripPreview = null;
           this._tripError = null;
-          this._toast("Vacation saved. Have a good trip!");
+          this._toast(t("Vacation saved. Have a good trip!"));
           this._renderTabs();
           this._renderMain();
         } catch (err) {
@@ -1866,27 +2226,33 @@ class PlantManagerPanel extends HTMLElement {
       }
       case "end-trip": {
         const active = this._trip?.plan?.active;
-        if (!confirm(active ? "End the vacation now? Reminders go back to you." : "Cancel the planned vacation?")) break;
-        await this._run(this._ws("vacation/end"), active ? "Welcome back! 🌿" : "Vacation cancelled");
+        if (!confirm(active ? t("End the vacation now? Reminders go back to you.") : t("Cancel the planned vacation?"))) break;
+        await this._run(this._ws("vacation/end"), active ? t("Welcome back! 🌿") : t("Vacation cancelled"));
         break;
       }
       case "send-plan":
-        await this._run(this._ws("vacation/send_plan"), `Sent to ${this._trip.vacation.sitter || "the sitter"}`);
+        await this._run(
+          this._ws("vacation/send_plan"),
+          t("Sent to {sitter}", { sitter: this._trip.vacation.sitter || t("the sitter") })
+        );
         break;
       case "copy-plan":
         try {
           await navigator.clipboard.writeText(this._trip.text);
-          this._toast("Plan copied");
+          this._toast(t("Plan copied"));
         } catch (err) {
-          this._toast("Copying is not allowed here; use Print plan instead");
+          this._toast(t("Copying is not allowed here; use Print plan instead"));
         }
         break;
       case "print-plan":
         this._printPlan();
         break;
       case "delete-plant":
-        if (confirm(`Delete ${editor.plant.name} with its photos and care log?`)) {
-          const done = await this._run(this._ws("plants/delete", { plant_id: editor.id }), `Deleted ${editor.plant.name}`);
+        if (confirm(t("Delete {name} with its photos and care log?", { name: editor.plant.name }))) {
+          const done = await this._run(
+            this._ws("plants/delete", { plant_id: editor.id }),
+            t("Deleted {name}", { name: editor.plant.name })
+          );
           if (done !== null) this._closeEditor();
         }
         break;
@@ -1949,31 +2315,31 @@ class PlantManagerPanel extends HTMLElement {
       try {
         const report = await this._uploadFile("csv", file);
         const problems = [
-          ...report.errors.map((e) => ({ ...e, level: "medium", label: "skipped" })),
+          ...report.errors.map((e) => ({ ...e, level: "medium", label: t("skipped") })),
           ...report.warnings.map((e) => ({ ...e, level: "", label: "" })),
         ];
-        this._importReport = `<p class="meta">Imported ${report.created} plant(s).</p>${
+        this._importReport = `<p class="meta">${esc(t("Imported {n} plant(s).", { n: report.created }))}</p>${
           problems.length
             ? `<div class="list">${problems
-                .map((e) => `<div class="warning ${e.level}">⚠ Row ${e.row} ${esc(e.name || "")}: ${esc(e.error)}${e.label ? ` (${e.label})` : ""}</div>`)
+                .map((e) => `<div class="warning ${e.level}">${esc(t("⚠ Row {row} {name}: {error}", { row: e.row, name: e.name || "", error: e.error }))}${e.label ? ` (${esc(e.label)})` : ""}</div>`)
                 .join("")}</div>`
             : ""
         }`;
-        this._toast(`Imported ${report.created} plant(s)`);
+        this._toast(t("Imported {n} plant(s)", { n: report.created }));
       } catch (err) {
-        this._toast(`Import failed: ${err.message}`);
+        this._toast(t("Import failed: {error}", { error: err.message }));
       }
       this._renderMain();
     } else if (el.dataset.restore !== undefined) {
       const [file] = el.files;
       el.value = "";
-      if (!file || !confirm("Replace ALL plants, photos and care logs with this backup? The current data is kept as *.before-restore.")) return;
+      if (!file || !confirm(t("Replace ALL plants, photos and care logs with this backup? The current data is kept as *.before-restore."))) return;
       try {
         const result = await this._uploadFile("backup", file);
-        this._toast(`Restored ${result.plants} plant(s) and ${result.photos} photo(s)`);
+        this._toast(t("Restored {plants} plant(s) and {photos} photo(s)", { plants: result.plants, photos: result.photos }));
         this._importReport = "";
       } catch (err) {
-        this._toast(`Restore failed: ${err.message}`);
+        this._toast(t("Restore failed: {error}", { error: err.message }));
       }
     } else if (el.dataset.identify !== undefined && editor) {
       const [file] = el.files;

@@ -220,6 +220,34 @@ with sync_playwright() as p:
     panel.locator(".plant-card", has_text="Pothos").wait_for(timeout=30000)
     page.screenshot(path=f"{OUT}/13-restored.png")
 
+    step("german")
+    # Switching the profile language re-renders the open panel in German.
+    page.evaluate(
+        """() => document.querySelector('home-assistant')
+          .dispatchEvent(new CustomEvent('hass-language-select', { detail: 'de' }))"""
+    )
+    page.wait_for_function(
+        "() => document.querySelector('home-assistant').hass.language === 'de'", timeout=30000
+    )
+    panel.locator("h1", has_text="Pflanzen").wait_for(timeout=15000)
+    panel.locator('[data-action="view"][data-view="today"]', has_text="Heute").wait_for(
+        timeout=10000
+    )
+    panel.locator('[data-action="new-plant"]', has_text="Pflanze hinzufügen").wait_for(
+        timeout=10000
+    )
+    page.screenshot(path=f"{OUT}/16-de-plants.png")
+    panel.locator('[data-action="view"][data-view="vacation"]').click()
+    panel.locator("h2", has_text="gießt an").wait_for(timeout=10000)
+    panel.locator("th", has_text="Während du weg bist").wait_for(timeout=10000)
+    page.screenshot(path=f"{OUT}/17-de-vacation.png", full_page=True)
+    panel.locator(".plant-card, .link", has_text="Monty").first.click()
+    panel.locator("text=Warum alle").wait_for(timeout=15000)
+    page.screenshot(path=f"{OUT}/18-de-detail.png", full_page=True)
+    page.goto(BASE + "/dashboard-plants/0")
+    page.locator("plant-manager-card").locator("text=Brauchen Wasser").wait_for(timeout=30000)
+    page.screenshot(path=f"{OUT}/19-de-card.png")
+
     browser.close()
 
 relevant = [e for e in errors if "plant" in e.lower() or "pageerror" in e]

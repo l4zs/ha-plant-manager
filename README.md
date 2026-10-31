@@ -155,6 +155,10 @@ automation:
           message: "{{ trigger.event.data.name }} needs water 💧"
 ```
 
+## Languages
+
+English and German. The panel and the card follow each user's language from their Home Assistant profile and switch right away when it changes. Texts the integration writes itself follow the same rule where it knows the reader: phone notifications a user set up under 🔔 come in that user's language, and the sitter's plan from the panel comes in the language of whoever sends it. The calendar, to-do list, Home Assistant notifications and the shared notify action use Home Assistant's language. Built-in species get German common names and care tips, and can be found by their German name (e.g. "Bogenhanf").
+
 ## Development
 
 Tests run in Docker, because Home Assistant's test harness doesn't install on Windows:
