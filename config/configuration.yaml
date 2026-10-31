@@ -1,0 +1,51 @@
+default_config:
+
+logger:
+  default: info
+  logs:
+    custom_components.plant_manager: debug
+
+# Adjustable fake room sensors for trying Plant Manager.
+input_number:
+  living_room_temperature:
+    name: Living room temperature
+    min: 0
+    max: 40
+    step: 0.5
+    initial: 21
+    unit_of_measurement: "°C"
+  living_room_humidity:
+    name: Living room humidity
+    min: 0
+    max: 100
+    step: 1
+    initial: 50
+    unit_of_measurement: "%"
+  monstera_soil_moisture:
+    name: Monstera soil moisture
+    min: 0
+    max: 100
+    step: 1
+    initial: 45
+    unit_of_measurement: "%"
+
+template:
+  - sensor:
+      - name: Living room temperature
+        unique_id: demo_living_room_temperature
+        device_class: temperature
+        state_class: measurement
+        unit_of_measurement: "°C"
+        state: "{{ states('input_number.living_room_temperature') }}"
+      - name: Living room humidity
+        unique_id: demo_living_room_humidity
+        device_class: humidity
+        state_class: measurement
+        unit_of_measurement: "%"
+        state: "{{ states('input_number.living_room_humidity') }}"
+      - name: Monstera soil moisture
+        unique_id: demo_monstera_soil_moisture
+        device_class: moisture
+        state_class: measurement
+        unit_of_measurement: "%"
+        state: "{{ states('input_number.monstera_soil_moisture') }}"

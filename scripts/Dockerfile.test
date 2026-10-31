@@ -1,0 +1,9 @@
+FROM python:3.14-slim
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential && rm -rf /var/lib/apt/lists/*
+COPY requirements_test.txt /tmp/requirements_test.txt
+RUN pip install --no-cache-dir -r /tmp/requirements_test.txt ruff
+# The frontend integration needs its package, pinned to what this HA version requires.
+RUN python -c "import json, homeassistant.components.frontend as f, pathlib; print(' '.join(json.loads((pathlib.Path(f.__file__).parent / 'manifest.json').read_text())['requirements']))" \
+    | xargs pip install --no-cache-dir
+WORKDIR /src
+CMD ["pytest", "-q"]
