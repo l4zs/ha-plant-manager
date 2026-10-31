@@ -52,3 +52,5 @@ if ($failed) {
     Write-Host "`nFailed: $($failed -join ', ')" -ForegroundColor Red
     exit 1
 }
+# Otherwise robocopy's last exit code (1 = files copied) would be the script's.
+exit 0
