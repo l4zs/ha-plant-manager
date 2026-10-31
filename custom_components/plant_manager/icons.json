@@ -1,0 +1,57 @@
+{
+  "entity": {
+    "sensor": {
+      "plants": { "default": "mdi:sprout" },
+      "needs_water": { "default": "mdi:watering-can-outline" },
+      "problems": { "default": "mdi:flower-pollen-outline" },
+      "next_watering": { "default": "mdi:calendar-clock" },
+      "status": {
+        "default": "mdi:sprout",
+        "state": {
+          "water_soon": "mdi:water-outline",
+          "needs_water": "mdi:water-alert",
+          "overdue": "mdi:water-off"
+        }
+      },
+      "water_reserve": { "default": "mdi:water-percent" },
+      "watering_interval": { "default": "mdi:repeat" },
+      "last_watered": { "default": "mdi:watering-can" },
+      "next_fertilization": { "default": "mdi:flask-outline" }
+    },
+    "binary_sensor": {
+      "needs_water": {
+        "default": "mdi:watering-can-outline",
+        "state": { "on": "mdi:watering-can" }
+      },
+      "problem": {
+        "default": "mdi:flower",
+        "state": { "on": "mdi:flower-pollen-outline" }
+      },
+      "vacation": {
+        "default": "mdi:home",
+        "state": { "on": "mdi:bag-suitcase" }
+      }
+    },
+    "button": {
+      "water": { "default": "mdi:watering-can" },
+      "snooze": { "default": "mdi:sleep" },
+      "fertilize": { "default": "mdi:flask" }
+    },
+    "todo": {
+      "care_tasks": { "default": "mdi:format-list-checks" }
+    },
+    "calendar": {
+      "care_calendar": { "default": "mdi:calendar-heart" }
+    }
+  },
+  "services": {
+    "water": { "service": "mdi:watering-can" },
+    "snooze": { "service": "mdi:sleep" },
+    "fertilize": { "service": "mdi:flask" },
+    "log_care": { "service": "mdi:notebook-edit" },
+    "send_reminder": { "service": "mdi:bell-ring" },
+    "identify": { "service": "mdi:camera-iris" },
+    "set_vacation": { "service": "mdi:bag-suitcase" },
+    "end_vacation": { "service": "mdi:home-import-outline" }
+  }
+}

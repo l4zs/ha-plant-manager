@@ -1,0 +1,15 @@
+{
+  "domain": "plant_manager",
+  "name": "Plant Manager",
+  "after_dependencies": ["ai_task", "camera", "media_source"],
+  "codeowners": ["@l4zs"],
+  "config_flow": true,
+  "dependencies": ["frontend", "http", "panel_custom", "websocket_api"],
+  "documentation": "https://github.com/l4zs/ha-plant-manager",
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/l4zs/ha-plant-manager/issues",
+  "requirements": [],
+  "single_config_entry": true,
+  "version": "0.2.0"
+}

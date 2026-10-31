@@ -1,0 +1,99 @@
+water:
+  fields:
+    plant_id:
+      required: true
+      selector:
+        text:
+          multiple: true
+    at:
+      selector:
+        datetime:
+    feedback:
+      selector:
+        select:
+          translation_key: feedback
+          options:
+            - too_dry
+            - just_right
+            - too_wet
+
+snooze:
+  fields:
+    plant_id:
+      required: true
+      selector:
+        text:
+          multiple: true
+
+fertilize:
+  fields:
+    plant_id:
+      required: true
+      selector:
+        text:
+          multiple: true
+    at:
+      selector:
+        datetime:
+
+log_care:
+  fields:
+    plant_id:
+      required: true
+      selector:
+        text:
+          multiple: true
+    kind:
+      required: true
+      selector:
+        select:
+          translation_key: care_kind
+          options:
+            - fertilize
+            - repot
+            - prune
+            - mist
+            - note
+    at:
+      selector:
+        datetime:
+    notes:
+      selector:
+        text:
+
+send_reminder:
+
+identify:
+  fields:
+    camera_entity_id:
+      selector:
+        entity:
+          domain: camera
+    image_path:
+      example: /config/www/plant.jpg
+      selector:
+        text:
+
+set_vacation:
+  fields:
+    start_date:
+      required: true
+      selector:
+        date:
+    end_date:
+      required: true
+      selector:
+        date:
+    sitter:
+      selector:
+        text:
+    sitter_notify:
+      example: notify.mobile_app_anna
+      selector:
+        text:
+    notes:
+      selector:
+        text:
+          multiline: true
+
+end_vacation:

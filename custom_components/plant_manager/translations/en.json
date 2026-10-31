@@ -1,0 +1,191 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Plant Manager",
+        "description": "Set up Plant Manager. Your plants are stored in the `plant_manager` folder of your configuration directory. Add them in the **Plants** panel; set up photo identification under **Configure**."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Plant Manager is already set up."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Plant Manager options",
+        "menu_options": {
+          "identification": "Plant identification and care data",
+          "reminders": "Reminders and weather"
+        }
+      },
+      "identification": {
+        "title": "Plant identification and care data",
+        "description": "Pl@ntNet is free (500 identifications a day, key from my.plantnet.org). OpenPlantbook (open.plantbook.io, free) adds measured temperature, humidity, soil moisture and light ranges per species. An AI Task entity can identify plants and estimates care profiles for species that are not in the built-in database.",
+        "data": {
+          "identification_provider": "Identify plants from photos with",
+          "plantnet_api_key": "Pl@ntNet API key",
+          "plantid_api_key": "Plant.id API key",
+          "ai_task_entity": "AI Task entity",
+          "openplantbook_client_id": "OpenPlantbook client ID",
+          "openplantbook_client_secret": "OpenPlantbook client secret"
+        },
+        "data_description": {
+          "ai_task_entity": "Leave empty to use your default AI Task entity. Used for AI identification and care profiles of unknown species."
+        }
+      },
+      "reminders": {
+        "title": "Reminders and weather",
+        "data": {
+          "notify_alerts": "Show Home Assistant notifications",
+          "notify_service": "Notify action",
+          "reminder_time": "Daily reminder at",
+          "weather_entity": "Weather entity"
+        },
+        "data_description": {
+          "notify_alerts": "Notifications for plants that need water or fertilizer, and for problems (too cold, too dark, ...).",
+          "notify_service": "Also send to a phone, e.g. notify.mobile_app_my_phone: problems right away, and a daily summary of what to water and fertilize.",
+          "reminder_time": "When the daily summary is sent.",
+          "weather_entity": "Outdoor plants without their own sensors use its temperature and humidity; rain counts as watering for uncovered plants."
+        }
+      }
+    },
+    "error": {
+      "api_key_required": "This provider needs an API key.",
+      "openplantbook_incomplete": "Enter both the OpenPlantbook client ID and secret, or neither.",
+      "openplantbook_invalid_auth": "OpenPlantbook rejected the credentials.",
+      "openplantbook_cannot_connect": "Could not connect to OpenPlantbook.",
+      "notify_not_found": "This notify action does not exist."
+    }
+  },
+  "selector": {
+    "provider": {
+      "options": {
+        "none": "Nothing, I choose the species myself",
+        "plantnet": "Pl@ntNet (free API key)",
+        "plantid": "Plant.id by Kindwise (paid API key)",
+        "ai_task": "AI Task (uses your AI integration)"
+      }
+    },
+    "feedback": {
+      "options": {
+        "too_dry": "Soil was too dry: remind me earlier",
+        "just_right": "Just right",
+        "too_wet": "Soil was still wet: remind me later"
+      }
+    },
+    "care_kind": {
+      "options": {
+        "fertilize": "Fertilized",
+        "repot": "Repotted",
+        "prune": "Pruned",
+        "mist": "Misted",
+        "note": "Note"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "plants": { "name": "Plants", "unit_of_measurement": "plants" },
+      "needs_water": { "name": "Plants needing water", "unit_of_measurement": "plants" },
+      "problems": { "name": "Plants with problems", "unit_of_measurement": "plants" },
+      "next_watering": { "name": "Next watering" },
+      "status": {
+        "name": "Watering status",
+        "state": {
+          "ok": "OK",
+          "water_soon": "Water soon",
+          "needs_water": "Needs water",
+          "overdue": "Overdue"
+        }
+      },
+      "water_reserve": { "name": "Estimated water reserve" },
+      "watering_interval": { "name": "Watering interval" },
+      "last_watered": { "name": "Last watered" },
+      "next_fertilization": { "name": "Next fertilization" }
+    },
+    "binary_sensor": {
+      "needs_water": { "name": "Needs water" },
+      "problem": { "name": "Problem" },
+      "vacation": { "name": "Vacation" }
+    },
+    "button": {
+      "water": { "name": "Watered" },
+      "snooze": { "name": "Soil still moist" },
+      "fertilize": { "name": "Fertilized" }
+    },
+    "todo": {
+      "care_tasks": { "name": "Plant care" }
+    },
+    "calendar": {
+      "care_calendar": { "name": "Plant care" }
+    }
+  },
+  "services": {
+    "water": {
+      "name": "Water",
+      "description": "Logs that plants were watered.",
+      "fields": {
+        "plant_id": { "name": "Plants", "description": "Plant IDs (shown in the plant's dialog in the panel)." },
+        "at": { "name": "When", "description": "When they were watered. Defaults to now." },
+        "feedback": { "name": "Soil before watering", "description": "How dry the soil was. Tunes future reminders for the plant." }
+      }
+    },
+    "snooze": {
+      "name": "Soil still moist",
+      "description": "Postpones the watering reminder and learns a slightly longer interval.",
+      "fields": {
+        "plant_id": { "name": "Plants", "description": "Plant IDs." }
+      }
+    },
+    "fertilize": {
+      "name": "Fertilize",
+      "description": "Logs that plants were fertilized.",
+      "fields": {
+        "plant_id": { "name": "Plants", "description": "Plant IDs." },
+        "at": { "name": "When", "description": "Defaults to now." }
+      }
+    },
+    "log_care": {
+      "name": "Log care",
+      "description": "Adds an entry to the care log: fertilized, repotted, pruned, misted, or a note.",
+      "fields": {
+        "plant_id": { "name": "Plants", "description": "Plant IDs." },
+        "kind": { "name": "What", "description": "The kind of care." },
+        "at": { "name": "When", "description": "Defaults to now." },
+        "notes": { "name": "Notes", "description": "Optional notes." }
+      }
+    },
+    "send_reminder": {
+      "name": "Send reminder",
+      "description": "Sends today's care summary to the notify action now."
+    },
+    "identify": {
+      "name": "Identify plant",
+      "description": "Identifies a plant from a camera snapshot or an image file and returns candidate species.",
+      "fields": {
+        "camera_entity_id": { "name": "Camera", "description": "Camera to take a snapshot from." },
+        "image_path": { "name": "Image path", "description": "Path to an image in an allowlisted directory." }
+      }
+    },
+    "set_vacation": {
+      "name": "Plan vacation",
+      "description": "Plans a vacation (or changes the planned one): what to water before leaving, and when a plant sitter has to come.",
+      "fields": {
+        "start_date": { "name": "Leaving", "description": "The day you leave (in the morning)." },
+        "end_date": { "name": "Back", "description": "The day you are back (in the evening)." },
+        "sitter": { "name": "Plant sitter", "description": "Who waters while you are away." },
+        "sitter_notify": { "name": "Sitter's notify action", "description": "Sends the plant sitter a reminder on each day they need to come, e.g. notify.mobile_app_anna." },
+        "notes": { "name": "Notes", "description": "Added to the plan for the sitter (where the key is, the watering can, ...)." }
+      }
+    },
+    "end_vacation": {
+      "name": "End vacation",
+      "description": "Back early: ends the vacation that is going on, or cancels the planned one."
+    }
+  },
+  "exceptions": {
+    "not_loaded": { "message": "Plant Manager is not loaded." },
+    "path_not_allowed": { "message": "Access to {path} is not allowed. Add its folder to allowlist_external_dirs." }
+  }
+}
