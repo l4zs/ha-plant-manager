@@ -10,6 +10,8 @@
 #   net use \\host\config /user:<samba-user> *
 # Restart Home Assistant afterwards to load the new version.
 #
+# Only committed files are deployed: the script refuses if anything it would send isn't committed.
+#
 # The copy mirrors the folder, so it overwrites changes made on an instance and deletes files
 # added there. Each deploy leaves a record of what it copied (.deployed.json in the integration's
 # folder). If an instance no longer matches its record, the script lists the differences and asks
@@ -50,15 +52,30 @@ function Read-Record([string]$dest) {
     }
 }
 
-# The commit being deployed, unless the integration has uncommitted changes.
-function Get-CleanCommit {
+# The commit being deployed. Refuses if a file that would be copied isn't exactly that commit's:
+# changed, staged or untracked, or ignored by git, which the copy would still send.
+function Get-DeployCommit {
+    $commit = $null
     try {
-        $status = git -C $repo status --porcelain -- custom_components/plant_manager
-        if ($LASTEXITCODE -ne 0 -or $status) { return $null }
-        $commit = git -C $repo rev-parse HEAD
-        if ($LASTEXITCODE -eq 0) { return "$commit".Trim() }
-    } catch {}
-    return $null
+        $status = git -C $repo status --porcelain --ignored -- custom_components/plant_manager
+        $statusOk = $LASTEXITCODE -eq 0
+        $commit = "$(git -C $repo rev-parse HEAD)".Trim()
+        if ($LASTEXITCODE -ne 0) { $statusOk = $false }
+    } catch {
+        $statusOk = $false
+    }
+    if (-not $statusOk) {
+        Write-Host "Not deploying: git can't confirm what would be sent." -ForegroundColor Red
+        exit 1
+    }
+    $uncommitted = @($status | Where-Object { $_ -notmatch "__pycache__/" })
+    if ($uncommitted.Count) {
+        Write-Host "Not deploying: these files would be sent, but aren't committed:" -ForegroundColor Red
+        $uncommitted | ForEach-Object { Write-Host "   $_" }
+        Write-Host "Commit or remove them, then deploy again. No instance was touched."
+        exit 1
+    }
+    return $commit
 }
 
 # The record's commit as a temporary folder to diff against, or $null if git doesn't have it.
@@ -138,7 +155,7 @@ if (-not $Targets) {
 $version = (Get-Content (Join-Path $source "manifest.json") -Raw | ConvertFrom-Json).version
 Write-Host "Plant Manager $version"
 
-$commit = Get-CleanCommit
+$commit = Get-DeployCommit
 $failed = @()
 foreach ($share in $Targets) {
     $dest = Join-Path $share "custom_components\plant_manager"
