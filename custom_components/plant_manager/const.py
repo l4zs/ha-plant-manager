@@ -7,6 +7,8 @@ from typing import Final
 DOMAIN: Final = "plant_manager"
 NAME: Final = "Plant Manager"
 
+PLANTNET_API: Final = "https://my-api.plantnet.org/v2"
+
 STORAGE_DIR: Final = "plant_manager"
 DB_FILENAME: Final = "plants.db"
 PHOTO_DIR: Final = "photos"

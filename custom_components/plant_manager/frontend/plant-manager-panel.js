@@ -1,5 +1,7 @@
-import {installGardenPanel} from './garden-panel.js?v=20261102-1';
-import {plantName} from './garden-common.js?v=20261102-1';
+// Loaded under this file's own ?v=<version>, so that a new release is never mixed with cached files.
+const MODULE_QUERY = new URL(import.meta.url).search;
+const {installGardenPanel} = await import(`./garden-panel.js${MODULE_QUERY}`);
+const {plantName, applyGardenTheme} = await import(`./garden-common.js${MODULE_QUERY}`);
 // Plant Manager sidebar panel. Plain web component, no build step.
 
 const DOMAIN = "plant_manager";
@@ -703,6 +705,7 @@ class PlantManagerPanel extends HTMLElement {
     LANG = language;
     LOCALE = "de-DE";
     this._hass = hass;
+    applyGardenTheme(this, hass);
     if (first) this._init();
     else if (changed && this._config) this._reloadLanguage();
   }
@@ -743,6 +746,14 @@ class PlantManagerPanel extends HTMLElement {
   }
 
   connectedCallback() {
+    // Home Assistant can set these before this file has finished loading its modules.
+    for (const prop of ["hass", "narrow", "route", "panel"]) {
+      if (Object.hasOwn(this, prop)) {
+        const value = this[prop];
+        delete this[prop];
+        this[prop] = value;
+      }
+    }
     if (this._hass && this._config && !this._unsub) this._subscribe();
   }
 
@@ -2371,6 +2382,6 @@ class PlantManagerPanel extends HTMLElement {
   }
 }
 
-customElements.define("plant-manager-panel", PlantManagerPanel);
-
+// Before define: an element already on the page is upgraded by it, right away.
 installGardenPanel(PlantManagerPanel);
+customElements.define("plant-manager-panel", PlantManagerPanel);

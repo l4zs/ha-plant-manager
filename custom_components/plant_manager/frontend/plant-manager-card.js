@@ -1,4 +1,5 @@
-import {registerGardenCards} from './garden-cards.js?v=20261102-1';
+// Loaded under this file's own ?v=<version>, so that a new release is never mixed with cached files.
+const {registerGardenCards} = await import(`./garden-cards.js${new URL(import.meta.url).search}`);
 // Plant Manager Lovelace card: plants that need water, with a quick "watered" button.
 
 const CARD_DOMAIN = "plant_manager";

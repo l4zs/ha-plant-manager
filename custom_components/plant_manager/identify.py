@@ -19,6 +19,7 @@ from .const import (
     CONF_ID_PROVIDER,
     CONF_PLANTID_API_KEY,
     CONF_PLANTNET_API_KEY,
+    PLANTNET_API,
     PROVIDER_AI_TASK,
     PROVIDER_PLANTID,
     PROVIDER_PLANTNET,
@@ -26,7 +27,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLANTNET_URL = "https://my-api.plantnet.org/v2/identify/all"
+PLANTNET_URL = f"{PLANTNET_API}/identify/all"
 PLANTID_URL = "https://plant.id/api/v3/identification"
 TIMEOUT = aiohttp.ClientTimeout(total=60)
 
