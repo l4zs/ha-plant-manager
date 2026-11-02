@@ -1,3 +1,5 @@
+import {installGardenPanel} from './garden-panel.js?v=20261101-1';
+import {plantName} from './garden-common.js?v=20261101-1';
 // Plant Manager sidebar panel. Plain web component, no build step.
 
 const DOMAIN = "plant_manager";
@@ -42,7 +44,7 @@ const GERMAN = {
   "Fabric grow bag": "Pflanzsack aus Stoff",
   "Self-watering pot": "Selbstbewässerungstopf",
   "No drainage hole": "Ohne Abflussloch",
-  Watered: "Gegossen",
+  Watered: "Jetzt gegossen",
   Fertilized: "Gedüngt",
   "Soil still moist": "Erde noch feucht",
   Repotted: "Umgetopft",
@@ -97,7 +99,7 @@ const GERMAN = {
   "The CSV has one row per plant and uses the same columns for export and import, so an export is a template for adding many plants from a spreadsheet. Only <b>name</b> and <b>species</b> are needed; the care profile is looked up for the species, and profile columns you fill in win. A backup contains the database and all photos; Home Assistant's own backups include them too.":
     "Die CSV hat eine Zeile pro Pflanze und dieselben Spalten für Export und Import, ein Export ist also eine Vorlage, um viele Pflanzen aus einer Tabelle hinzuzufügen. Nur <b>name</b> und <b>species</b> (Art) sind nötig; das Pflegeprofil wird für die Art nachgeschlagen, und ausgefüllte Profilspalten haben Vorrang. Eine Sicherung enthält die Datenbank und alle Fotos; die Sicherungen von Home Assistant enthalten sie auch.",
   // today
-  "💧 Watered": "💧 Gegossen",
+  "💧 Watered": "💧 Jetzt gegossen",
   "Watered; it was too dry, remind me earlier": "Gegossen; es war zu trocken, früher erinnern",
   "Was too dry": "War zu trocken",
   "Not yet; remind me a bit later": "Noch nicht; etwas später erinnern",
@@ -318,10 +320,7 @@ let LANG = "en";
 let LOCALE = "en"; // for numbers: "5,3" in German
 
 // The user's language from their Home Assistant profile ("de", "de-CH", ...).
-const languageOf = (hass) => {
-  const code = String(hass?.locale?.language || hass?.language || "en").toLowerCase().split("-")[0];
-  return TRANSLATIONS[code] ? code : "en";
-};
+const languageOf = () => "de";
 
 const t = (text, values = {}) =>
   (TRANSLATIONS[LANG]?.[text] ?? text).replace(/\{(\w+)\}/g, (match, key) =>
@@ -702,7 +701,7 @@ class PlantManagerPanel extends HTMLElement {
     const language = languageOf(hass);
     const changed = language !== LANG;
     LANG = language;
-    LOCALE = hass.locale?.language || hass.language || "en";
+    LOCALE = "de-DE";
     this._hass = hass;
     if (first) this._init();
     else if (changed && this._config) this._reloadLanguage();
@@ -731,6 +730,7 @@ class PlantManagerPanel extends HTMLElement {
 
   set route(route) {
     this._route = route;
+    if (this._config) this._gardenOpenFromLocation?.();
     const view = (route?.path || "").replace(/^\//, "").split("/")[0];
     if (VIEWS.includes(view) && view !== this._view) {
       this._view = view;
@@ -900,7 +900,7 @@ class PlantManagerPanel extends HTMLElement {
           if (!plant.care?.needs_water && !plant.care?.problems?.length) return false;
         } else if (status && plant.care?.status !== status) return false;
         if (!query) return true;
-        return [plant.name, plant.species, plant.common_name, this._areaName(plant.area_id)]
+        return [plantName(plant), plant.name, plant.species, plant.common_name, this._areaName(plant.area_id)]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(query));
       })
@@ -915,7 +915,7 @@ class PlantManagerPanel extends HTMLElement {
   _renderPlants() {
     const { q, area, status } = this._filter;
     const plants = this._filteredPlants();
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const areas = this._areas();
     return `
       <div class="filters">
@@ -942,7 +942,7 @@ class PlantManagerPanel extends HTMLElement {
                 <button class="btn small water quick" data-action="water" data-id="${plant.id}" title="${t("Watered")}">💧</button>
               </div>
               <div class="info">
-                <div class="name">${esc(plant.name)}</div>
+                <div class="name">${esc(plantName(plant))}</div>
                 <div class="meta species">${esc(plant.species || plant.common_name || "")}</div>
                 ${this._reserveBar(care)}
                 <div class="row">
@@ -999,7 +999,7 @@ class PlantManagerPanel extends HTMLElement {
       <div class="list-row">
         ${this._thumb(plant, true)}
         <div class="grow">
-          <button class="link" data-action="open-plant" data-id="${plant.id}" style="padding:0">${esc(plant.name)}</button>
+          <button class="link" data-action="open-plant" data-id="${plant.id}" style="padding:0">${esc(plantName(plant))}</button>
           <div class="meta">${meta}</div>
         </div>
         <div class="actions-bar">${actions}</div>
@@ -1007,7 +1007,7 @@ class PlantManagerPanel extends HTMLElement {
   }
 
   _renderToday() {
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const needs = this._plants.filter((p) => p.care?.needs_water);
     const soon = this._plants.filter(
       (p) => !p.care?.needs_water && p.care && p.care.days_until_watering < 2
@@ -1076,7 +1076,7 @@ class PlantManagerPanel extends HTMLElement {
   _tripBanner() {
     const { vacation, plan } = this._trip || {};
     if (!vacation || !plan) return "";
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const format = new Intl.DateTimeFormat(lang || "en", { weekday: "short", day: "numeric", month: "short" });
     const when = plan.active
       ? t("Away until {date}", { date: format.format(new Date(plan.back)) })
@@ -1093,7 +1093,7 @@ class PlantManagerPanel extends HTMLElement {
   }
 
   _renderSchedule() {
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const schedule = this._schedule.filter((event) => event.kind !== "vacation");
     if (!schedule.length) {
       return `${this._tripBanner()}<div class="empty">${t("Nothing planned for the next four weeks.")}</div>`;
@@ -1169,7 +1169,7 @@ class PlantManagerPanel extends HTMLElement {
       const preview = this._tripPreview;
       return `${this._tripForm(vacation)}${preview?.plan ? this._tripPlan(preview.plan, null) : ""}`;
     }
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const format = new Intl.DateTimeFormat(lang || "en", { weekday: "short", day: "numeric", month: "long" });
     const when = plan.active
       ? t("You're away, back {when}", { when: relativeDay(plan.back, lang) })
@@ -1219,7 +1219,7 @@ class PlantManagerPanel extends HTMLElement {
 
   // `vacation` is null for a preview: no actions then.
   _tripPlan(plan, vacation) {
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const entries = plan.plants;
     const byId = Object.fromEntries(entries.map((e) => [e.plant_id, e]));
     const tips = this._config.vacation_tips || {};
@@ -1329,7 +1329,7 @@ class PlantManagerPanel extends HTMLElement {
   _printPlan() {
     const { vacation, plan, text } = this._trip || {};
     if (!plan) return;
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const dayFormat = new Intl.DateTimeFormat(lang || "en", { weekday: "long", day: "numeric", month: "long" });
     const plant = (id) => this._plantsById[id] || { name: id };
     const html = `<!doctype html><html lang="${LANG}"><head><meta charset="utf-8"><title>${esc(t("Plant care"))}</title>
@@ -1530,7 +1530,7 @@ class PlantManagerPanel extends HTMLElement {
         <div class="dialog">
           <div class="dialog-head">
             <button class="btn" data-action="close-editor">✕</button>
-            <h2>${esc(editor.draft.name || editor.plant?.name || t("New plant"))}</h2>
+            <h2>${esc(plantName({...editor.plant, name: editor.draft.name || editor.plant?.name || t("New plant")}))}</h2>
             <button class="btn primary" data-action="save-plant" ${editor.busy ? "disabled" : ""}>${editor.busy ? t("Saving…") : t("Save")}</button>
           </div>
           <div class="dialog-body">
@@ -1611,7 +1611,7 @@ class PlantManagerPanel extends HTMLElement {
     const plant = editor.plant;
     if (!plant?.care) return "";
     const care = plant.care;
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const factors = Object.entries(care.factors || {})
       .filter(([, value]) => Math.abs(value - 1) > 0.005)
       .map(
@@ -1790,7 +1790,7 @@ class PlantManagerPanel extends HTMLElement {
     const editor = this._editor;
     if (!editor.id) return "";
     const events = editor.plant?.events || [];
-    const lang = this._hass.language;
+    const lang = "de-DE";
     const when = new Intl.DateTimeFormat(lang || "en", { dateStyle: "medium", timeStyle: "short" });
     return `
       <div class="section">
@@ -2058,7 +2058,7 @@ class PlantManagerPanel extends HTMLElement {
   }
 
   _plantName(id) {
-    return this._plantsById?.[id]?.name || this._editor?.draft.name || t("Plant");
+    return this._plantsById?.[id] ? plantName(this._plantsById[id]) : this._editor?.draft.name || t("Plant");
   }
 
   async _onClick(ev) {
@@ -2372,3 +2372,5 @@ class PlantManagerPanel extends HTMLElement {
 }
 
 customElements.define("plant-manager-panel", PlantManagerPanel);
+
+installGardenPanel(PlantManagerPanel);

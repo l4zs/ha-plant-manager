@@ -1,3 +1,4 @@
+import {registerGardenCards} from './garden-cards.js?v=20261101-1';
 // Plant Manager Lovelace card: plants that need water, with a quick "watered" button.
 
 const CARD_DOMAIN = "plant_manager";
@@ -12,8 +13,8 @@ const CARD_GERMAN = {
   "Water {when}": "Gießen {when}",
   "Plant Manager is not available: {error}": "Plant Manager ist nicht verfügbar: {error}",
   "Loading…": "Lädt…",
-  Watered: "Gegossen",
-  "🌿 All plants are happy.": "🌿 Alle Pflanzen sind zufrieden.",
+  Watered: "Jetzt gegossen",
+  "🌿 All plants are happy.": "Aktuell keine Gießprüfung fällig.",
   "Need water": "Brauchen Wasser",
   Problems: "Probleme",
   Title: "Titel",
@@ -22,10 +23,7 @@ const CARD_GERMAN = {
 const CARD_TRANSLATIONS = { de: CARD_GERMAN };
 
 // The user's language from their Home Assistant profile ("de", "de-CH", ...).
-const cardLanguage = (hass) => {
-  const code = String(hass?.locale?.language || hass?.language || "en").toLowerCase().split("-")[0];
-  return CARD_TRANSLATIONS[code] ? code : "en";
-};
+const cardLanguage = () => "de";
 
 const cardT = (hass, text, values = {}) =>
   (CARD_TRANSLATIONS[cardLanguage(hass)]?.[text] ?? text).replace(/\{(\w+)\}/g, (match, key) =>
@@ -258,3 +256,5 @@ window.customCards.push({
   description: "Plants that need water, with a quick watered button.",
   preview: true,
 });
+
+registerGardenCards();

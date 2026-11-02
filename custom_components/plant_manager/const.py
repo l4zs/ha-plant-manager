@@ -14,7 +14,7 @@ STAGING_DIR: Final = "_staging"
 
 PANEL_URL_PATH: Final = "plant-manager"
 PANEL_COMPONENT: Final = "plant-manager-panel"
-PANEL_TITLE: Final = "Plants"
+PANEL_TITLE: Final = "Pflanzen"
 PANEL_ICON: Final = "mdi:sprout"
 STATIC_URL: Final = "/plant_manager_static"
 CARD_FILENAME: Final = "plant-manager-card.js"

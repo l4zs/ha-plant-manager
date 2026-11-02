@@ -41,6 +41,7 @@ from .http import (
     UploadView,
 )
 from .manager import PlantManager, get_manager
+from .health import HealthView
 from .schema import VACATION_SCHEMA, normalize_vacation
 
 PLATFORMS: list[Platform] = [
@@ -73,6 +74,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(StagedPhotoView())
     hass.http.register_view(PhotoUploadView())
     hass.http.register_view(IdentifyView())
+    hass.http.register_view(HealthView())
     hass.http.register_view(BackupView())
     hass.http.register_view(UploadView())
     websocket_api.async_register(hass)
@@ -215,13 +217,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlantConfigEntry) -> boo
         hass,
         webcomponent_name=PANEL_COMPONENT,
         frontend_url_path=PANEL_URL_PATH,
-        module_url=f"{STATIC_URL}/{PANEL_FILENAME}?v={version}",
+        module_url=f"{STATIC_URL}/{PANEL_FILENAME}?v={version}&garden=20261101-1",
         sidebar_title=PANEL_TITLE,
         sidebar_icon=PANEL_ICON,
         require_admin=False,
         config={},
     )
-    card_url = f"{STATIC_URL}/{CARD_FILENAME}?v={version}"
+    card_url = f"{STATIC_URL}/{CARD_FILENAME}?v={version}&garden=20261101-1"
     frontend.add_extra_js_url(hass, card_url)
     hass.data[DATA_CARD_URL] = card_url
 
