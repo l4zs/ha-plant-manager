@@ -1,4 +1,4 @@
-import {escapeHTML as e, icon, plantName, plantTile, countdown, dateText, GARDEN_STYLES, updateCountdowns} from './garden-common.js?v=20261101-1';
+import {escapeHTML as e, icon, plantName, plantTile, countdown, dateText, GARDEN_STYLES, updateCountdowns} from './garden-common.js?v=20261102-1';
 
 const PANEL_STYLES = `
  :host{--pm-leaf:#285747;--pm-accent:#285747;--pm-water:#285747;--pm-radius:18px;background:var(--primary-background-color,#f5f7f2)}

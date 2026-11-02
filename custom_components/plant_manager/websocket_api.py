@@ -85,9 +85,13 @@ def _with_manager(func: Handler) -> Callable[..., Awaitable[None]]:
 
 
 def _signed(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, plant: dict[str, Any]
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    plant: dict[str, Any],
+    names: dict[str, str],
 ) -> dict[str, Any]:
-    """Add signed photo URLs to a plant."""
+    """Add the name to show and signed photo URLs to a plant."""
+    plant["display_name"] = names.get(plant["id"], plant["name"])
     plant["photos"] = [
         {
             **photo,
@@ -175,8 +179,9 @@ async def ws_config(hass, connection, msg, manager: PlantManager) -> None:
 async def ws_summary(hass, connection, msg, manager: PlantManager) -> None:
     """Return counts and the plants that need care (used by the card)."""
     summary = manager.summary
+    names = species_db.display_names(manager.plants, msg["lang"])
     attention = [
-        _signed(hass, connection, manager.plant_view(plant))
+        _signed(hass, connection, manager.plant_view(plant), names)
         for plant in manager.plants
         if (status := manager.status.get(plant["id"]))
         and (status["needs_water"] or status["status"] == "water_soon" or status["fertilize_due"])
@@ -240,9 +245,13 @@ async def ws_schedule(hass, connection, msg, manager: PlantManager) -> None:
 @_with_manager
 async def ws_plants_list(hass, connection, msg, manager: PlantManager) -> None:
     """List all plants with their status."""
+    names = species_db.display_names(manager.plants, msg["lang"])
     connection.send_result(
         msg["id"],
-        [_signed(hass, connection, manager.plant_view(plant)) for plant in manager.plants],
+        [
+            _signed(hass, connection, manager.plant_view(plant), names)
+            for plant in manager.plants
+        ],
     )
 
 
@@ -252,7 +261,8 @@ async def ws_plants_list(hass, connection, msg, manager: PlantManager) -> None:
 async def ws_plants_get(hass, connection, msg, manager: PlantManager) -> None:
     """Return one plant with its care log."""
     plant = await manager.async_plant(msg["plant_id"])
-    connection.send_result(msg["id"], _signed(hass, connection, plant))
+    names = species_db.display_names(manager.plants, msg["lang"])
+    connection.send_result(msg["id"], _signed(hass, connection, plant, names))
 
 
 @_command(
@@ -263,7 +273,8 @@ async def ws_plants_get(hass, connection, msg, manager: PlantManager) -> None:
 async def ws_plants_create(hass, connection, msg, manager: PlantManager) -> None:
     """Create a plant."""
     plant = await manager.async_create_plant(normalize_plant(msg["plant"]), msg["lang"])
-    connection.send_result(msg["id"], _signed(hass, connection, plant))
+    names = species_db.display_names(manager.plants, msg["lang"])
+    connection.send_result(msg["id"], _signed(hass, connection, plant, names))
 
 
 @_command(
@@ -278,7 +289,8 @@ async def ws_plants_create(hass, connection, msg, manager: PlantManager) -> None
 async def ws_plants_update(hass, connection, msg, manager: PlantManager) -> None:
     """Update a plant."""
     plant = await manager.async_update_plant(msg["plant_id"], normalize_plant(msg["changes"]))
-    connection.send_result(msg["id"], _signed(hass, connection, plant))
+    names = species_db.display_names(manager.plants, msg["lang"])
+    connection.send_result(msg["id"], _signed(hass, connection, plant, names))
 
 
 @_command({vol.Required("type"): f"{DOMAIN}/plants/delete", vol.Required("plant_id"): str})

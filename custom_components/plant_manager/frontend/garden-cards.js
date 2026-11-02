@@ -1,4 +1,4 @@
-import {escapeHTML as e,icon,plantName,plantTile,countdown,dateText,GARDEN_STYLES,updateCountdowns} from './garden-common.js?v=20261101-1';
+import {escapeHTML as e,icon,plantName,plantTile,countdown,dateText,GARDEN_STYLES,updateCountdowns} from './garden-common.js?v=20261102-1';
 
 class PlantEinzelkarte extends HTMLElement {
  constructor(){super();this.attachShadow({mode:'open'});this.shadowRoot.addEventListener('click',ev=>this._click(ev));}

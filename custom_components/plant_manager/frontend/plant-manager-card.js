@@ -1,4 +1,4 @@
-import {registerGardenCards} from './garden-cards.js?v=20261101-1';
+import {registerGardenCards} from './garden-cards.js?v=20261102-1';
 // Plant Manager Lovelace card: plants that need water, with a quick "watered" button.
 
 const CARD_DOMAIN = "plant_manager";
@@ -105,7 +105,7 @@ class PlantManagerCard extends HTMLElement {
 
   async _load() {
     try {
-      this._summary = await this._hass.callWS({ type: `${CARD_DOMAIN}/summary` });
+      this._summary = await this._hass.callWS({ type: `${CARD_DOMAIN}/summary`, language: cardLanguage(this._hass) });
       this._error = null;
     } catch (err) {
       this._error = err.message || String(err);
@@ -157,7 +157,7 @@ class PlantManagerCard extends HTMLElement {
                 <div class="row">
                   <div class="thumb" data-open="/plant-manager/plants">${photo ? `<img src="${cardEsc(photo.url)}" alt="">` : "🪴"}</div>
                   <div class="grow">
-                    <div class="name">${cardEsc(plant.name)}</div>
+                    <div class="name">${cardEsc(plant.display_name || plant.name)}</div>
                     <div class="meta ${care.needs_water ? "late" : ""}">${cardEsc(cardDue(this._hass, care))}</div>
                   </div>
                   ${care.needs_water || care.status === "water_soon" ? `<button class="water" data-water="${plant.id}" title="${cardT(this._hass, "Watered")}">💧</button>` : ""}

@@ -1,10 +1,7 @@
 // Shared presentation for the collection and individual floor-plan cards.
 export const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const ALIASES = {'Peace lily':'Einblatt','Nerveplant':'Fittonie','Arabian coffee':'Kaffeestrauch','Heart leaf philodendron':'Herzblatt-Philodendron','White bird of-paradise tree':'Weiße Strelitzie','Bird of paradise':'Strelitzie','Kentia palm':'Kentia-Palme'};
-export function plantName(p) {
-  if(p.name === 'ZZ Plant') return 'Glücksfeder' + (p.id === '00b5ddc996fc49889fe5ce2713f76197' ? ' · 1' : p.id === '0c9cb6f7d211462d870f3a6a965875df' ? ' · 2' : '');
-  return ALIASES[p.name] || p.name;
-}
+// The backend works out the name: translated from the species, and numbered if it is shared.
+export const plantName = p => p.display_name || p.name || '';
 const PATHS = {
  leaf:'M20 4C10 2 3 6 4 14c1 7 12 9 15 0 1-3 1-7 1-10ZM5 20l10-10',
  drop:'M12 3c-2 4-7 9-7 13a7 7 0 0 0 14 0c0-4-5-9-7-13ZM8 16a4 4 0 0 0 4 4',

@@ -195,8 +195,11 @@ _ENTRIES: list[SpeciesEntry] = [
         18,
         42,
         toxic=True,
+        aliases=("zamioculcas",),
         notes="Stores water in its rhizomes; err on the side of underwatering.",
     ),
+    _e("fittonia", "Nerve plant", _HUMIDITY_LOVER, 4, 21, toxic=False, aliases=("nerveplant",)),
+    _e("coffea arabica", "Arabian coffee", _TROPICAL, 6, 21),
     _e(
         "spathiphyllum",
         "Peace lily",
@@ -496,6 +499,35 @@ def common_name(entry: SpeciesEntry, lang: str | None = None) -> str:
     if language(lang) == "de":
         return COMMON_NAMES_DE.get(entry.key, entry.common_name)
     return entry.common_name
+
+
+def _translated_name(plant: dict[str, Any], lang: str | None) -> str:
+    """A name the plant got from its species in the language, any other name as it is."""
+    name = plant["name"]
+    entry = lookup(plant.get("species") or "") if language(lang) == "de" else None
+    if entry is None or _norm(name) not in (
+        _norm(plant.get("common_name") or ""),
+        _norm(entry.common_name),
+    ):
+        return name
+    # A genus says less than a name like "Philodendron Green Congo".
+    if " " not in entry.key and entry.key in _norm(name):
+        return name
+    return common_name(entry, lang)
+
+
+def display_names(plants: list[dict[str, Any]], lang: str | None = None) -> dict[str, str]:
+    """The names to show by plant id; plants sharing one are numbered, oldest first."""
+    groups: dict[str, list[tuple[dict[str, Any], str]]] = {}
+    for plant in plants:
+        name = _translated_name(plant, lang)
+        groups.setdefault(_norm(name), []).append((plant, name))
+    names = {}
+    for group in groups.values():
+        group.sort(key=lambda item: (item[0].get("created_at") or "", item[0]["id"]))
+        for number, (plant, name) in enumerate(group, start=1):
+            names[plant["id"]] = f"{name} · {number}" if len(group) > 1 else name
+    return names
 
 
 def profile(entry: SpeciesEntry, lang: str | None = None) -> dict[str, Any]:

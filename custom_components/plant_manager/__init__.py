@@ -217,13 +217,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlantConfigEntry) -> boo
         hass,
         webcomponent_name=PANEL_COMPONENT,
         frontend_url_path=PANEL_URL_PATH,
-        module_url=f"{STATIC_URL}/{PANEL_FILENAME}?v={version}&garden=20261101-1",
+        module_url=f"{STATIC_URL}/{PANEL_FILENAME}?v={version}&garden=20261102-1",
         sidebar_title=PANEL_TITLE,
         sidebar_icon=PANEL_ICON,
         require_admin=False,
         config={},
     )
-    card_url = f"{STATIC_URL}/{CARD_FILENAME}?v={version}&garden=20261101-1"
+    card_url = f"{STATIC_URL}/{CARD_FILENAME}?v={version}&garden=20261102-1"
     frontend.add_extra_js_url(hass, card_url)
     hass.data[DATA_CARD_URL] = card_url
 

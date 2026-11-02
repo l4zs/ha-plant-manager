@@ -1,5 +1,5 @@
-import {installGardenPanel} from './garden-panel.js?v=20261101-1';
-import {plantName} from './garden-common.js?v=20261101-1';
+import {installGardenPanel} from './garden-panel.js?v=20261102-1';
+import {plantName} from './garden-common.js?v=20261102-1';
 // Plant Manager sidebar panel. Plain web component, no build step.
 
 const DOMAIN = "plant_manager";
@@ -1530,7 +1530,7 @@ class PlantManagerPanel extends HTMLElement {
         <div class="dialog">
           <div class="dialog-head">
             <button class="btn" data-action="close-editor">✕</button>
-            <h2>${esc(plantName({...editor.plant, name: editor.draft.name || editor.plant?.name || t("New plant")}))}</h2>
+            <h2>${esc(editor.draft.name && editor.draft.name !== editor.plant?.name ? editor.draft.name : editor.plant ? plantName(editor.plant) : t("New plant"))}</h2>
             <button class="btn primary" data-action="save-plant" ${editor.busy ? "disabled" : ""}>${editor.busy ? t("Saving…") : t("Save")}</button>
           </div>
           <div class="dialog-body">
