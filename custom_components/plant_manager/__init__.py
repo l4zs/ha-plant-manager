@@ -19,6 +19,7 @@ from . import websocket_api
 from .const import (
     CARD_FILENAME,
     CARE_KINDS,
+    CONF_SIDEBAR_TITLE,
     DOMAIN,
     FEEDBACK,
     KIND_SNOOZE,
@@ -41,6 +42,7 @@ from .http import (
     StagedPhotoView,
     UploadView,
 )
+from .i18n import tr
 from .manager import PlantManager, get_manager
 from .schema import VACATION_SCHEMA, normalize_vacation
 
@@ -218,7 +220,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlantConfigEntry) -> boo
         webcomponent_name=PANEL_COMPONENT,
         frontend_url_path=PANEL_URL_PATH,
         module_url=f"{STATIC_URL}/{PANEL_FILENAME}?v={version}",
-        sidebar_title=PANEL_TITLE,
+        # One title per instance: it can't follow each user.
+        sidebar_title=manager.options[CONF_SIDEBAR_TITLE] or tr(manager.language, PANEL_TITLE),
         sidebar_icon=PANEL_ICON,
         require_admin=False,
         config={},

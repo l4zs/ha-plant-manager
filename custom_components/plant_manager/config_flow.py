@@ -17,6 +17,7 @@ import voluptuous as vol
 from .const import (
     CONF_AI_TASK_ENTITY,
     CONF_ID_PROVIDER,
+    CONF_LANGUAGE,
     CONF_NOTIFY_ALERTS,
     CONF_NOTIFY_SERVICE,
     CONF_OPB_CLIENT_ID,
@@ -24,14 +25,17 @@ from .const import (
     CONF_PLANTID_API_KEY,
     CONF_PLANTNET_API_KEY,
     CONF_REMINDER_TIME,
+    CONF_SIDEBAR_TITLE,
     CONF_WEATHER_ENTITY,
     DEFAULT_OPTIONS,
     DOMAIN,
+    LANGUAGE_PER_USER,
     NAME,
     PROVIDER_PLANTID,
     PROVIDER_PLANTNET,
     PROVIDERS,
 )
+from .i18n import LANGUAGES
 from .knowledge import OpenPlantbook, OpenPlantbookError
 
 _PASSWORD = selector.TextSelector(
@@ -93,7 +97,9 @@ class PlantManagerOptionsFlow(OptionsFlow):
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Choose what to change."""
-        return self.async_show_menu(step_id="init", menu_options=["identification", "reminders"])
+        return self.async_show_menu(
+            step_id="init", menu_options=["identification", "reminders", "language"]
+        )
 
     async def async_step_identification(
         self, user_input: dict[str, Any] | None = None
@@ -149,6 +155,30 @@ class PlantManagerOptionsFlow(OptionsFlow):
                 schema, user_input or self._suggested()
             ),
             errors=errors,
+        )
+
+    async def async_step_language(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Each user's language or one for everyone, and the title in the sidebar."""
+        if user_input is not None:
+            user_input[CONF_SIDEBAR_TITLE] = user_input.get(CONF_SIDEBAR_TITLE, "").strip()
+            return self.async_create_entry(data={**self._options, **user_input})
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_LANGUAGE): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[LANGUAGE_PER_USER, *LANGUAGES],
+                        translation_key="language",
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional(CONF_SIDEBAR_TITLE): selector.TextSelector(),
+            }
+        )
+        return self.async_show_form(
+            step_id="language",
+            data_schema=self.add_suggested_values_to_schema(schema, self._suggested()),
         )
 
     async def async_step_reminders(

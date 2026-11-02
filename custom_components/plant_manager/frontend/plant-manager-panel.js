@@ -1,7 +1,7 @@
 // Loaded under this file's own ?v=<version>, so that a new release is never mixed with cached files.
 const MODULE_QUERY = new URL(import.meta.url).search;
 const {installGardenPanel} = await import(`./garden-panel.js${MODULE_QUERY}`);
-const {plantName, applyGardenTheme} = await import(`./garden-common.js${MODULE_QUERY}`);
+const {plantName, syncGardenLanguage, languageOf, localeOf, loadLanguageSetting} = await import(`./garden-common.js${MODULE_QUERY}`);
 // Plant Manager sidebar panel. Plain web component, no build step.
 
 const DOMAIN = "plant_manager";
@@ -321,9 +321,6 @@ const TRANSLATIONS = { de: GERMAN };
 let LANG = "en";
 let LOCALE = "en"; // for numbers: "5,3" in German
 
-// The user's language from their Home Assistant profile ("de", "de-CH", ...).
-const languageOf = () => "de";
-
 const t = (text, values = {}) =>
   (TRANSLATIONS[LANG]?.[text] ?? text).replace(/\{(\w+)\}/g, (match, key) =>
     key in values ? String(values[key]) : match
@@ -479,9 +476,9 @@ const reserveColor = (care) =>
   !care
     ? "var(--pm-divider)"
     : care.needs_water
-      ? "var(--error-color, #db4437)"
+      ? "var(--error-color)"
       : care.status === "water_soon"
-        ? "var(--warning-color, #ef8f00)"
+        ? "var(--warning-color)"
         : "var(--pm-water)";
 
 async function resizeImage(file, max = 1600) {
@@ -504,12 +501,12 @@ const STYLES = `
     color: var(--primary-text-color);
     font-family: var(--paper-font-body1_-_font-family, Roboto, sans-serif);
     --pm-radius: var(--ha-card-border-radius, 12px);
-    --pm-card: var(--card-background-color, #fff);
+    --pm-card: var(--card-background-color);
     --pm-muted: var(--secondary-text-color);
-    --pm-divider: var(--divider-color, rgba(0,0,0,.12));
+    --pm-divider: var(--divider-color);
     --pm-accent: var(--primary-color);
-    --pm-leaf: #43a047;
-    --pm-water: #039be5;
+    --pm-leaf: var(--primary-color);
+    --pm-water: var(--primary-color);
   }
   * { box-sizing: border-box; }
   .toolbar {
@@ -517,7 +514,7 @@ const STYLES = `
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     padding: 8px 16px; min-height: 56px;
     background: var(--app-header-background-color, var(--primary-color));
-    color: var(--app-header-text-color, #fff);
+    color: var(--app-header-text-color, var(--text-primary-color));
   }
   .toolbar h1 { font-size: 20px; font-weight: 400; margin: 0 16px 0 0; }
   .tabs { display: flex; gap: 4px; overflow-x: auto; }
@@ -528,7 +525,7 @@ const STYLES = `
   .tab.active { opacity: 1; font-weight: 500; box-shadow: inset 0 -2px 0 currentColor; border-radius: 0; }
   .badge {
     display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px;
-    border-radius: 9px; background: var(--error-color, #db4437); color: #fff;
+    border-radius: 9px; background: var(--error-color); color: var(--text-primary-color);
     font-size: 12px; line-height: 18px; text-align: center;
   }
   .menu { background: none; border: none; color: inherit; cursor: pointer; padding: 8px; }
@@ -547,10 +544,10 @@ const STYLES = `
     font: inherit; cursor: pointer; border-radius: 18px; padding: 8px 16px;
     border: 1px solid var(--pm-divider); background: var(--pm-card); color: var(--primary-text-color);
   }
-  .btn.primary { background: var(--pm-accent); color: var(--text-primary-color, #fff); border-color: transparent; }
-  .btn.water { background: var(--pm-water); color: #fff; border-color: transparent; }
+  .btn.primary { background: var(--pm-accent); color: var(--text-primary-color); border-color: transparent; }
+  .btn.water { background: var(--pm-water); color: var(--text-primary-color); border-color: transparent; }
   .btn.small { padding: 4px 12px; font-size: 13px; }
-  .btn.danger { color: var(--error-color, #db4437); }
+  .btn.danger { color: var(--error-color); }
   .btn:disabled { opacity: .5; cursor: default; }
   button.link { background: none; border: none; color: var(--pm-accent); cursor: pointer; font: inherit; padding: 4px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
@@ -561,10 +558,10 @@ const STYLES = `
   }
   .narrow .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .narrow main { padding: 12px; }
-  .plant-card.needs { border-color: var(--error-color, #db4437); }
+  .plant-card.needs { border-color: var(--error-color); }
   .thumb {
     aspect-ratio: 1; width: 100%; display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(160deg, rgba(67,160,71,.18), rgba(67,160,71,.06)); position: relative;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--primary-color) 18%, transparent), color-mix(in srgb, var(--primary-color) 6%, transparent)); position: relative;
     font-size: 42px;
   }
   .thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -577,9 +574,9 @@ const STYLES = `
     display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px;
     background: var(--secondary-background-color); color: var(--primary-text-color);
   }
-  .chip.ok { background: rgba(67,160,71,.2); }
-  .chip.water_soon { background: rgba(255,152,0,.22); }
-  .chip.needs_water, .chip.overdue, .chip.problem { background: rgba(219,68,55,.2); }
+  .chip.ok { background: color-mix(in srgb, var(--success-color) 20%, transparent); }
+  .chip.water_soon { background: color-mix(in srgb, var(--warning-color) 22%, transparent); }
+  .chip.needs_water, .chip.overdue, .chip.problem { background: color-mix(in srgb, var(--error-color) 20%, transparent); }
   .reserve { height: 6px; border-radius: 3px; background: var(--secondary-background-color); overflow: hidden; }
   .reserve > div { height: 100%; border-radius: 3px; }
   .row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -587,7 +584,7 @@ const STYLES = `
     background: var(--pm-card); border: 1px solid var(--pm-divider); border-radius: var(--pm-radius);
     padding: 16px; margin-bottom: 16px;
   }
-  .section.alerts { border-color: var(--warning-color, #ef8f00); }
+  .section.alerts { border-color: var(--warning-color); }
   .section h2 { font-size: 16px; font-weight: 500; margin: 0 0 12px; }
   .section h3 { font-size: 14px; font-weight: 500; margin: 12px 0 4px; color: var(--pm-muted); }
   .list { display: flex; flex-direction: column; }
@@ -605,8 +602,8 @@ const STYLES = `
   .day-head { font-weight: 500; margin: 16px 0 4px; }
   .day-head:first-child { margin-top: 0; }
   .warning { font-size: 14px; margin: 4px 0; }
-  .warning.high { color: var(--error-color, #db4437); }
-  .warning.medium { color: var(--warning-color, #ef8f00); }
+  .warning.high { color: var(--error-color); }
+  .warning.medium { color: var(--warning-color); }
   .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; }
   .tile { background: var(--pm-card); border: 1px solid var(--pm-divider); border-radius: var(--pm-radius); padding: 14px 16px; }
   .tile .value { font-size: 28px; font-weight: 500; margin-top: 2px; }
@@ -617,7 +614,7 @@ const STYLES = `
 
   /* editor */
   .overlay {
-    position: fixed; inset: 0; z-index: 10; background: rgba(0,0,0,.45);
+    position: fixed; inset: 0; z-index: 10; background: var(--mdc-dialog-scrim-color, rgba(0,0,0,.45));
     display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 24px 12px;
   }
   .dialog {
@@ -643,7 +640,7 @@ const STYLES = `
   .photo.pending .thumb { outline: 2px dashed var(--pm-accent); }
   .photo .actions { display: flex; justify-content: space-between; }
   .cover-badge {
-    position: absolute; top: 4px; left: 4px; background: var(--pm-accent); color: #fff;
+    position: absolute; top: 4px; left: 4px; background: var(--pm-accent); color: var(--text-primary-color);
     font-size: 11px; padding: 1px 6px; border-radius: 8px;
   }
   .candidates { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 12px; }
@@ -659,7 +656,7 @@ const STYLES = `
   .fact .value { font-size: 20px; }
   .toast {
     position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 20;
-    background: #323232; color: #fff; padding: 12px 16px; border-radius: 8px;
+    background: var(--primary-text-color); color: var(--primary-background-color); padding: 12px 16px; border-radius: 8px;
     display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px);
     box-shadow: 0 3px 12px rgba(0,0,0,.3);
   }
@@ -667,12 +664,12 @@ const STYLES = `
   .actions-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .banner {
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
-    padding: 12px 16px; border-radius: var(--pm-radius); background: rgba(3,155,229,.12);
-    border: 1px solid rgba(3,155,229,.35);
+    padding: 12px 16px; border-radius: var(--pm-radius); background: color-mix(in srgb, var(--primary-color) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
   }
   .banner .grow { flex: 1; min-width: 200px; }
-  .chip.measures { background: rgba(255,152,0,.22); }
-  .chip.sitter { background: rgba(3,155,229,.2); }
+  .chip.measures { background: color-mix(in srgb, var(--warning-color) 22%, transparent); }
+  .chip.sitter { background: color-mix(in srgb, var(--primary-color) 20%, transparent); }
   .tip { font-size: 14px; margin: 2px 0; }
 `;
 
@@ -703,9 +700,9 @@ class PlantManagerPanel extends HTMLElement {
     const language = languageOf(hass);
     const changed = language !== LANG;
     LANG = language;
-    LOCALE = "de-DE";
+    LOCALE = localeOf(hass);
     this._hass = hass;
-    applyGardenTheme(this, hass);
+    syncGardenLanguage(hass);
     if (first) this._init();
     else if (changed && this._config) this._reloadLanguage();
   }
@@ -769,6 +766,9 @@ class PlantManagerPanel extends HTMLElement {
   }
 
   async _init() {
+    await loadLanguageSetting(this._hass);
+    LANG = languageOf(this._hass);
+    LOCALE = localeOf(this._hass);
     this.shadowRoot.innerHTML = `<style>${STYLES}</style><main><div class="empty">${t("Loading…")}</div></main>`;
     try {
       await this._load();
@@ -926,7 +926,7 @@ class PlantManagerPanel extends HTMLElement {
   _renderPlants() {
     const { q, area, status } = this._filter;
     const plants = this._filteredPlants();
-    const lang = "de-DE";
+    const lang = LOCALE;
     const areas = this._areas();
     return `
       <div class="filters">
@@ -1018,7 +1018,7 @@ class PlantManagerPanel extends HTMLElement {
   }
 
   _renderToday() {
-    const lang = "de-DE";
+    const lang = LOCALE;
     const needs = this._plants.filter((p) => p.care?.needs_water);
     const soon = this._plants.filter(
       (p) => !p.care?.needs_water && p.care && p.care.days_until_watering < 2
@@ -1087,7 +1087,7 @@ class PlantManagerPanel extends HTMLElement {
   _tripBanner() {
     const { vacation, plan } = this._trip || {};
     if (!vacation || !plan) return "";
-    const lang = "de-DE";
+    const lang = LOCALE;
     const format = new Intl.DateTimeFormat(lang || "en", { weekday: "short", day: "numeric", month: "short" });
     const when = plan.active
       ? t("Away until {date}", { date: format.format(new Date(plan.back)) })
@@ -1104,7 +1104,7 @@ class PlantManagerPanel extends HTMLElement {
   }
 
   _renderSchedule() {
-    const lang = "de-DE";
+    const lang = LOCALE;
     const schedule = this._schedule.filter((event) => event.kind !== "vacation");
     if (!schedule.length) {
       return `${this._tripBanner()}<div class="empty">${t("Nothing planned for the next four weeks.")}</div>`;
@@ -1180,7 +1180,7 @@ class PlantManagerPanel extends HTMLElement {
       const preview = this._tripPreview;
       return `${this._tripForm(vacation)}${preview?.plan ? this._tripPlan(preview.plan, null) : ""}`;
     }
-    const lang = "de-DE";
+    const lang = LOCALE;
     const format = new Intl.DateTimeFormat(lang || "en", { weekday: "short", day: "numeric", month: "long" });
     const when = plan.active
       ? t("You're away, back {when}", { when: relativeDay(plan.back, lang) })
@@ -1230,7 +1230,7 @@ class PlantManagerPanel extends HTMLElement {
 
   // `vacation` is null for a preview: no actions then.
   _tripPlan(plan, vacation) {
-    const lang = "de-DE";
+    const lang = LOCALE;
     const entries = plan.plants;
     const byId = Object.fromEntries(entries.map((e) => [e.plant_id, e]));
     const tips = this._config.vacation_tips || {};
@@ -1340,7 +1340,7 @@ class PlantManagerPanel extends HTMLElement {
   _printPlan() {
     const { vacation, plan, text } = this._trip || {};
     if (!plan) return;
-    const lang = "de-DE";
+    const lang = LOCALE;
     const dayFormat = new Intl.DateTimeFormat(lang || "en", { weekday: "long", day: "numeric", month: "long" });
     const plant = (id) => this._plantsById[id] || { name: id };
     const html = `<!doctype html><html lang="${LANG}"><head><meta charset="utf-8"><title>${esc(t("Plant care"))}</title>
@@ -1622,7 +1622,7 @@ class PlantManagerPanel extends HTMLElement {
     const plant = editor.plant;
     if (!plant?.care) return "";
     const care = plant.care;
-    const lang = "de-DE";
+    const lang = LOCALE;
     const factors = Object.entries(care.factors || {})
       .filter(([, value]) => Math.abs(value - 1) > 0.005)
       .map(
@@ -1801,7 +1801,7 @@ class PlantManagerPanel extends HTMLElement {
     const editor = this._editor;
     if (!editor.id) return "";
     const events = editor.plant?.events || [];
-    const lang = "de-DE";
+    const lang = LOCALE;
     const when = new Intl.DateTimeFormat(lang || "en", { dateStyle: "medium", timeStyle: "short" });
     return `
       <div class="section">

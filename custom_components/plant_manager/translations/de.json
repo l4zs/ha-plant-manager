@@ -16,7 +16,8 @@
         "title": "Plant-Manager-Optionen",
         "menu_options": {
           "identification": "Pflanzenerkennung und Pflegedaten",
-          "reminders": "Erinnerungen und Wetter"
+          "reminders": "Erinnerungen und Wetter",
+          "language": "Sprache"
         }
       },
       "identification": {
@@ -47,6 +48,18 @@
           "notify_service": "Ein Handy mit der Home-Assistant-App (oder eine andere Benachrichtigungsaktion) für alle: Probleme sofort und täglich eine Übersicht, was gegossen und gedüngt werden muss. Jede Person kann außerdem mit dem 🔔-Knopf im Pflanzen-Panel eigene Handys und eine eigene Uhrzeit wählen.",
           "reminder_time": "Wann die tägliche Übersicht gesendet wird.",
           "weather_entity": "Pflanzen draußen ohne eigene Sensoren nutzen ihre Temperatur und Luftfeuchtigkeit; Regen zählt bei nicht überdachten Pflanzen als Gießen."
+        }
+      },
+      "language": {
+        "title": "Sprache",
+        "description": "Normalerweise sieht jede Person Plant Manager in der Sprache ihres Home-Assistant-Profils. Was für alle gleich ist, etwa der Titel in der Seitenleiste, der Kalender und der Plan für die Vertretung, nutzt die Sprache dieses Home Assistant.",
+        "data": {
+          "language": "Sprache",
+          "sidebar_title": "Titel in der Seitenleiste"
+        },
+        "data_description": {
+          "language": "Wähle eine Sprache, um sie auf diesem Home Assistant für alle Personen zu verwenden: Panel, Karten, Benachrichtigungen, Kalender, Pflanzenerkennung und Titel in der Seitenleiste. Geöffnete Browser-Tabs danach neu laden.",
+          "sidebar_title": "Leer lassen für „Pflanzen“ in der oben gewählten Sprache, oder in der Sprache dieses Home Assistant, wenn jede Person ihre eigene hat."
         }
       }
     },
@@ -82,14 +95,32 @@
         "mist": "Besprüht",
         "note": "Notiz"
       }
+    },
+    "language": {
+      "options": {
+        "user": "Sprache der jeweiligen Person",
+        "en": "Englisch",
+        "de": "Deutsch"
+      }
     }
   },
   "entity": {
     "sensor": {
-      "plants": { "name": "Pflanzen", "unit_of_measurement": "Pflanzen" },
-      "needs_water": { "name": "Pflanzen, die Wasser brauchen", "unit_of_measurement": "Pflanzen" },
-      "problems": { "name": "Pflanzen mit Problemen", "unit_of_measurement": "Pflanzen" },
-      "next_watering": { "name": "Nächstes Gießen" },
+      "plants": {
+        "name": "Pflanzen",
+        "unit_of_measurement": "Pflanzen"
+      },
+      "needs_water": {
+        "name": "Pflanzen, die Wasser brauchen",
+        "unit_of_measurement": "Pflanzen"
+      },
+      "problems": {
+        "name": "Pflanzen mit Problemen",
+        "unit_of_measurement": "Pflanzen"
+      },
+      "next_watering": {
+        "name": "Nächstes Gießen"
+      },
       "status": {
         "name": "Gießstatus",
         "state": {
@@ -99,26 +130,50 @@
           "overdue": "Überfällig"
         }
       },
-      "water_reserve": { "name": "Geschätzter Wasservorrat" },
-      "watering_interval": { "name": "Gießintervall" },
-      "last_watered": { "name": "Zuletzt gegossen" },
-      "next_fertilization": { "name": "Nächstes Düngen" }
+      "water_reserve": {
+        "name": "Geschätzter Wasservorrat"
+      },
+      "watering_interval": {
+        "name": "Gießintervall"
+      },
+      "last_watered": {
+        "name": "Zuletzt gegossen"
+      },
+      "next_fertilization": {
+        "name": "Nächstes Düngen"
+      }
     },
     "binary_sensor": {
-      "needs_water": { "name": "Braucht Wasser" },
-      "problem": { "name": "Problem" },
-      "vacation": { "name": "Urlaub" }
+      "needs_water": {
+        "name": "Braucht Wasser"
+      },
+      "problem": {
+        "name": "Problem"
+      },
+      "vacation": {
+        "name": "Urlaub"
+      }
     },
     "button": {
-      "water": { "name": "Gegossen" },
-      "snooze": { "name": "Erde noch feucht" },
-      "fertilize": { "name": "Gedüngt" }
+      "water": {
+        "name": "Gegossen"
+      },
+      "snooze": {
+        "name": "Erde noch feucht"
+      },
+      "fertilize": {
+        "name": "Gedüngt"
+      }
     },
     "todo": {
-      "care_tasks": { "name": "Pflanzenpflege" }
+      "care_tasks": {
+        "name": "Pflanzenpflege"
+      }
     },
     "calendar": {
-      "care_calendar": { "name": "Pflanzenpflege" }
+      "care_calendar": {
+        "name": "Pflanzenpflege"
+      }
     }
   },
   "services": {
@@ -126,34 +181,64 @@
       "name": "Gießen",
       "description": "Trägt ein, dass Pflanzen gegossen wurden.",
       "fields": {
-        "plant_id": { "name": "Pflanzen", "description": "Pflanzen-IDs (stehen im Dialog der Pflanze im Panel)." },
-        "at": { "name": "Wann", "description": "Wann sie gegossen wurden. Standard ist jetzt." },
-        "feedback": { "name": "Erde vor dem Gießen", "description": "Wie trocken die Erde war. Passt die künftigen Erinnerungen für die Pflanze an." }
+        "plant_id": {
+          "name": "Pflanzen",
+          "description": "Pflanzen-IDs (stehen im Dialog der Pflanze im Panel)."
+        },
+        "at": {
+          "name": "Wann",
+          "description": "Wann sie gegossen wurden. Standard ist jetzt."
+        },
+        "feedback": {
+          "name": "Erde vor dem Gießen",
+          "description": "Wie trocken die Erde war. Passt die künftigen Erinnerungen für die Pflanze an."
+        }
       }
     },
     "snooze": {
       "name": "Erde noch feucht",
       "description": "Verschiebt die Gieß-Erinnerung und lernt ein etwas längeres Intervall.",
       "fields": {
-        "plant_id": { "name": "Pflanzen", "description": "Pflanzen-IDs." }
+        "plant_id": {
+          "name": "Pflanzen",
+          "description": "Pflanzen-IDs."
+        }
       }
     },
     "fertilize": {
       "name": "Düngen",
       "description": "Trägt ein, dass Pflanzen gedüngt wurden.",
       "fields": {
-        "plant_id": { "name": "Pflanzen", "description": "Pflanzen-IDs." },
-        "at": { "name": "Wann", "description": "Standard ist jetzt." }
+        "plant_id": {
+          "name": "Pflanzen",
+          "description": "Pflanzen-IDs."
+        },
+        "at": {
+          "name": "Wann",
+          "description": "Standard ist jetzt."
+        }
       }
     },
     "log_care": {
       "name": "Pflege eintragen",
       "description": "Fügt dem Pflegeprotokoll einen Eintrag hinzu: gedüngt, umgetopft, geschnitten, besprüht oder eine Notiz.",
       "fields": {
-        "plant_id": { "name": "Pflanzen", "description": "Pflanzen-IDs." },
-        "kind": { "name": "Was", "description": "Die Art der Pflege." },
-        "at": { "name": "Wann", "description": "Standard ist jetzt." },
-        "notes": { "name": "Notizen", "description": "Optionale Notizen." }
+        "plant_id": {
+          "name": "Pflanzen",
+          "description": "Pflanzen-IDs."
+        },
+        "kind": {
+          "name": "Was",
+          "description": "Die Art der Pflege."
+        },
+        "at": {
+          "name": "Wann",
+          "description": "Standard ist jetzt."
+        },
+        "notes": {
+          "name": "Notizen",
+          "description": "Optionale Notizen."
+        }
       }
     },
     "send_reminder": {
@@ -164,19 +249,40 @@
       "name": "Pflanze erkennen",
       "description": "Erkennt eine Pflanze auf einem Kamerabild oder einer Bilddatei und gibt mögliche Arten zurück.",
       "fields": {
-        "camera_entity_id": { "name": "Kamera", "description": "Kamera, von der ein Bild aufgenommen wird." },
-        "image_path": { "name": "Bildpfad", "description": "Pfad zu einem Bild in einem freigegebenen Verzeichnis." }
+        "camera_entity_id": {
+          "name": "Kamera",
+          "description": "Kamera, von der ein Bild aufgenommen wird."
+        },
+        "image_path": {
+          "name": "Bildpfad",
+          "description": "Pfad zu einem Bild in einem freigegebenen Verzeichnis."
+        }
       }
     },
     "set_vacation": {
       "name": "Urlaub planen",
       "description": "Plant einen Urlaub (oder ändert den geplanten): was vor der Abreise gegossen wird und wann ein Pflanzensitter kommen muss.",
       "fields": {
-        "start_date": { "name": "Abreise", "description": "Der Tag, an dem du abreist (morgens)." },
-        "end_date": { "name": "Zurück", "description": "Der Tag, an dem du zurück bist (abends)." },
-        "sitter": { "name": "Pflanzensitter", "description": "Wer gießt, während du weg bist." },
-        "sitter_notify": { "name": "Benachrichtigungsaktion des Sitters", "description": "Schickt dem Pflanzensitter an jedem Tag, an dem er kommen muss, eine Erinnerung, z. B. notify.mobile_app_anna." },
-        "notes": { "name": "Notizen", "description": "Kommen in den Plan für den Sitter (wo der Schlüssel ist, die Gießkanne, …)." }
+        "start_date": {
+          "name": "Abreise",
+          "description": "Der Tag, an dem du abreist (morgens)."
+        },
+        "end_date": {
+          "name": "Zurück",
+          "description": "Der Tag, an dem du zurück bist (abends)."
+        },
+        "sitter": {
+          "name": "Pflanzensitter",
+          "description": "Wer gießt, während du weg bist."
+        },
+        "sitter_notify": {
+          "name": "Benachrichtigungsaktion des Sitters",
+          "description": "Schickt dem Pflanzensitter an jedem Tag, an dem er kommen muss, eine Erinnerung, z. B. notify.mobile_app_anna."
+        },
+        "notes": {
+          "name": "Notizen",
+          "description": "Kommen in den Plan für den Sitter (wo der Schlüssel ist, die Gießkanne, …)."
+        }
       }
     },
     "end_vacation": {
@@ -185,7 +291,11 @@
     }
   },
   "exceptions": {
-    "not_loaded": { "message": "Plant Manager ist nicht geladen." },
-    "path_not_allowed": { "message": "Zugriff auf {path} ist nicht erlaubt. Füge den Ordner zu allowlist_external_dirs hinzu." }
+    "not_loaded": {
+      "message": "Plant Manager ist nicht geladen."
+    },
+    "path_not_allowed": {
+      "message": "Zugriff auf {path} ist nicht erlaubt. Füge den Ordner zu allowlist_external_dirs hinzu."
+    }
   }
 }

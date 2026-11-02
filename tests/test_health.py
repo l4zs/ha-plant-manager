@@ -119,3 +119,30 @@ def test_frontend_modules_have_no_fixed_version() -> None:
     """Modules load under the version the integration gives the entry file."""
     for path in FRONTEND.glob("*.js"):
         assert not re.search(r"\.js\?v=", path.read_text(encoding="utf-8")), path.name
+
+
+async def test_errors_follow_the_language(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    ws,
+    hass_client,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """The check's messages are English or German, like the rest."""
+    aioclient_mock.get(f"{PLANTNET_API}/subscription", status=401)
+    plant = await ws.cmd("plants/create", plant={"name": "Monty", "species": "Monstera deliciosa"})
+    client = await hass_client()
+    url = f"/api/{DOMAIN}/health/{plant['id']}"
+    english = await (await client.get(url, params={"language": "en"})).json()
+    assert english["message"] == "Pl@ntNet rejected the existing access."
+    german = await (await client.get(url, params={"language": "de"})).json()
+    assert german["message"] == "Pl@ntNet hat den vorhandenen Zugang abgelehnt."
+
+
+def test_frontend_colours_come_from_the_theme() -> None:
+    """Only the print page, which has no theme, has colours of its own."""
+    for path in FRONTEND.glob("*.js"):
+        text = path.read_text(encoding="utf-8")
+        text = re.sub(r"<!doctype html>.*?</html>", "", text, flags=re.DOTALL)
+        assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", text), path.name
+        assert not re.findall(r"(?:color|background):\s*(?:white|black)\b", text), path.name

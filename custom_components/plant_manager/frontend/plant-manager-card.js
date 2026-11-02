@@ -1,5 +1,7 @@
 // Loaded under this file's own ?v=<version>, so that a new release is never mixed with cached files.
-const {registerGardenCards} = await import(`./garden-cards.js${new URL(import.meta.url).search}`);
+const MODULE_QUERY = new URL(import.meta.url).search;
+const {registerGardenCards} = await import(`./garden-cards.js${MODULE_QUERY}`);
+const {languageOf, localeOf, loadLanguageSetting} = await import(`./garden-common.js${MODULE_QUERY}`);
 // Plant Manager Lovelace card: plants that need water, with a quick "watered" button.
 
 const CARD_DOMAIN = "plant_manager";
@@ -24,7 +26,7 @@ const CARD_GERMAN = {
 const CARD_TRANSLATIONS = { de: CARD_GERMAN };
 
 // The user's language from their Home Assistant profile ("de", "de-CH", ...).
-const cardLanguage = () => "de";
+const cardLanguage = (hass) => languageOf(hass);
 
 const cardT = (hass, text, values = {}) =>
   (CARD_TRANSLATIONS[cardLanguage(hass)]?.[text] ?? text).replace(/\{(\w+)\}/g, (match, key) =>
@@ -48,7 +50,7 @@ function cardDue(hass, care) {
   const days = Math.round(
     (new Date(care.next_watering).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000
   );
-  const when = new Intl.RelativeTimeFormat(hass?.language || "en", { numeric: "auto" }).format(days, "day");
+  const when = new Intl.RelativeTimeFormat(localeOf(hass), { numeric: "auto" }).format(days, "day");
   return cardT(hass, "Water {when}", { when });
 }
 
@@ -90,6 +92,7 @@ class PlantManagerCard extends HTMLElement {
 
   async _start() {
     if (!this.isConnected) return;
+    await loadLanguageSetting(this._hass);
     await this._load();
     this._unsub = this._hass.connection.subscribeMessage(
       (message) => {
@@ -183,21 +186,21 @@ class PlantManagerCard extends HTMLElement {
         .row { display: flex; align-items: center; gap: 12px; }
         .thumb { width: 44px; height: 44px; border-radius: 8px; overflow: hidden; flex: none; cursor: pointer;
           display: flex; align-items: center; justify-content: center; font-size: 22px;
-          background: rgba(67,160,71,.15); }
+          background: color-mix(in srgb, var(--primary-color) 15%, transparent); }
         .thumb img { width: 100%; height: 100%; object-fit: cover; }
         .grow { flex: 1; min-width: 0; }
         .name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .meta { font-size: 13px; color: var(--secondary-text-color); }
-        .meta.late { color: var(--error-color, #db4437); }
+        .meta.late { color: var(--error-color); }
         .water { border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; font-size: 18px;
-          background: #039be5; color: #fff; }
+          background: var(--primary-color); color: var(--text-primary-color); }
         .empty { color: var(--secondary-text-color); padding: 8px 0; }
         .counts { display: flex; gap: 8px; margin-top: 16px; }
         .counts button { flex: 1; background: var(--secondary-background-color); border: none; border-radius: 8px;
           padding: 8px 4px; cursor: pointer; color: var(--primary-text-color); font: inherit; font-size: 12px;
           display: flex; flex-direction: column; align-items: center; }
         .counts span { font-size: 20px; font-weight: 500; }
-        .counts .warn span { color: var(--error-color, #db4437); }
+        .counts .warn span { color: var(--error-color); }
       </style>
       <ha-card>
         <div class="title" data-open="/plant-manager/today">${cardEsc(this._config.title || cardT(this._hass, "Plants"))}</div>
@@ -224,6 +227,7 @@ class PlantManagerCardEditor extends HTMLElement {
 
   set hass(hass) {
     const changed = this._form && cardLanguage(hass) !== cardLanguage(this._hass);
+    if (!this._hass) loadLanguageSetting(hass).then(() => this._render());
     this._hass = hass;
     if (this._form) this._form.hass = hass;
     if (changed) this._render();

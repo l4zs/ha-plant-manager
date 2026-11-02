@@ -9,6 +9,7 @@ from pathlib import Path
 from freezegun.api import FrozenDateTimeFactory
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
+import pytest
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     async_fire_time_changed,
@@ -139,3 +140,46 @@ async def test_notifications_in_the_users_language(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
     assert mine[-1].data["message"].startswith("💧 Gießen: Monty")
+
+
+@pytest.mark.parametrize(("fixed", "profile"), [("de", "en"), ("en", "de")])
+async def test_fixed_language_overrides_every_language(
+    hass: HomeAssistant, entry: MockConfigEntry, ws, fixed: str, profile: str
+) -> None:
+    """With a language set, requests and background texts use it for everyone."""
+    assert (await ws.cmd("language")) == {"fixed": None}
+    hass.config.language = profile
+    plant = {"name": "ZZ Plant", "species": "Zamioculcas zamiifolia", "common_name": "ZZ Plant"}
+    names = {"en": "ZZ Plant", "de": "Glücksfeder"}
+    created = await ws.cmd("plants/create", plant=plant, language=profile)
+    assert created["display_name"] == names[profile]
+
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "language": fixed})
+    await hass.async_block_till_done()
+    manager = entry.runtime_data
+    assert manager.language == fixed
+    assert manager.ui_language(profile) == fixed
+    assert manager._user_language({"language": profile}) == fixed
+    assert (await ws.cmd("language")) == {"fixed": fixed}
+    listed = await ws.cmd("plants/list", language=profile)
+    assert listed[0]["display_name"] == names[fixed]
+
+
+@pytest.mark.parametrize(
+    ("system", "chosen", "title"),
+    [
+        ("de", "user", "Pflanzen"),
+        ("en", "user", "Plants"),
+        ("en", "de", "Pflanzen"),
+        ("de", "en", "Plants"),
+    ],
+)
+async def test_sidebar_title(
+    hass: HomeAssistant, entry: MockConfigEntry, system: str, chosen: str, title: str
+) -> None:
+    """The set language decides the title, otherwise Home Assistant's language does."""
+    hass.config.language = system
+    hass.config_entries.async_update_entry(entry, options={**entry.options, "language": chosen})
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.data["frontend_panels"]["plant-manager"].sidebar_title == title

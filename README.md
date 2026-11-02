@@ -159,6 +159,8 @@ automation:
 
 English and German. The panel and the card follow each user's language from their Home Assistant profile and switch right away when it changes. Texts the integration writes itself follow the same rule where it knows the reader: phone notifications a user set up under 🔔 come in that user's language, and the sitter's plan from the panel comes in the language of whoever sends it. The calendar, to-do list, Home Assistant notifications and the shared notify action use Home Assistant's language. Built-in species get German common names and care tips, and can be found by their German name (e.g. "Bogenhanf").
 
+To use one language for everyone on a Home Assistant, choose it under Settings → Devices & services → Plant Manager → Configure → Language. It covers everything Plant Manager writes: the panel, the cards, notifications, the calendar, plant identification and the sidebar title, which otherwise uses Home Assistant's language because there is one title per instance. The same page has a field to set your own sidebar title. Refresh open browser tabs afterwards. Home Assistant's own menus keep following each user's profile.
+
 ## Development
 
 Tests run in Docker, because Home Assistant's test harness doesn't install on Windows:

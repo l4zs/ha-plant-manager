@@ -52,7 +52,7 @@ with sync_playwright() as p:
     step("open panel")
     page.goto(BASE + "/plant-manager")
     panel = page.locator("plant-manager-panel")
-    panel.locator("text=No plants yet").wait_for(timeout=30000)
+    panel.locator("text=No plants in this selection.").wait_for(timeout=30000)
     page.screenshot(path=f"{OUT}/01-empty.png")
 
     step("add plant with photo")
@@ -76,7 +76,7 @@ with sync_playwright() as p:
     page.screenshot(path=f"{OUT}/02-editor.png", full_page=True)
     panel.locator('[data-action="save-plant"]').click()
     panel.locator(".toast", has_text="Saved Monty").wait_for(timeout=15000)
-    panel.locator(".plant-card", has_text="Monty").locator("img").wait_for(timeout=15000)
+    panel.locator(".g-plant", has_text="Monty").locator("img").wait_for(timeout=15000)
 
     step("more plants through the API")
     old = (date.today() - timedelta(days=25)).isoformat()
@@ -89,12 +89,12 @@ with sync_playwright() as p:
     }""",
         old,
     )
-    panel.locator(".plant-card", has_text="Fern").wait_for(timeout=15000)
+    panel.locator(".g-plant", has_text="Fern").wait_for(timeout=15000)
     page.wait_for_timeout(800)
     page.screenshot(path=f"{OUT}/03-plants.png")
 
     step("plant detail")
-    panel.locator(".plant-card", has_text="Monty").locator(".name").click()
+    panel.locator(".g-plant", has_text="Monty").locator(".g-name").click()
     panel.locator("text=Why every").wait_for(timeout=15000)
     page.screenshot(path=f"{OUT}/04-detail.png", full_page=True)
     panel.locator('[data-action="close-editor"]').click()
@@ -159,7 +159,7 @@ with sync_playwright() as p:
     )
     panel.locator("input[data-import-csv]").set_input_files(f"{OUT}/import.csv")
     panel.locator("text=Imported 2 plant(s).").wait_for(timeout=15000)
-    panel.locator(".plant-card", has_text="Pothos").wait_for(timeout=15000)
+    panel.locator(".g-plant", has_text="Pothos").wait_for(timeout=15000)
     page.screenshot(path=f"{OUT}/12-import.png")
     with page.expect_download() as download:
         panel.locator('[data-action="backup"]').click()
@@ -205,19 +205,19 @@ with sync_playwright() as p:
 
     step("restore backup")
     page.goto(BASE + "/plant-manager/plants")
-    panel.locator(".plant-card", has_text="Pothos").wait_for(timeout=30000)
+    panel.locator(".g-plant", has_text="Pothos").wait_for(timeout=30000)
     panel.evaluate(
         """async (el) => {
       const plant = el._plants.find((p) => p.name === "Pothos");
       await el.hass.callWS({type: "plant_manager/plants/delete", plant_id: plant.id});
     }"""
     )
-    panel.locator(".plant-card", has_text="Pothos").wait_for(state="detached", timeout=15000)
+    panel.locator(".g-plant", has_text="Pothos").wait_for(state="detached", timeout=15000)
     page.once("dialog", lambda dialog: dialog.accept())
     panel.locator('[data-action="toggle-data"]').click()
     panel.locator("input[data-restore]").set_input_files(f"{OUT}/backup.zip")
     panel.locator(".toast", has_text="Restored 5 plant(s)").wait_for(timeout=15000)
-    panel.locator(".plant-card", has_text="Pothos").wait_for(timeout=30000)
+    panel.locator(".g-plant", has_text="Pothos").wait_for(timeout=30000)
     page.screenshot(path=f"{OUT}/13-restored.png")
 
     step("german")
@@ -241,12 +241,65 @@ with sync_playwright() as p:
     panel.locator("h2", has_text="gießt an").wait_for(timeout=10000)
     panel.locator("th", has_text="Während du weg bist").wait_for(timeout=10000)
     page.screenshot(path=f"{OUT}/17-de-vacation.png", full_page=True)
-    panel.locator(".plant-card, .link", has_text="Monty").first.click()
+    panel.locator(".g-name, .link", has_text="Monty").first.click()
     panel.locator("text=Warum alle").wait_for(timeout=15000)
     page.screenshot(path=f"{OUT}/18-de-detail.png", full_page=True)
     page.goto(BASE + "/dashboard-plants/0")
     page.locator("plant-manager-card").locator("text=Brauchen Wasser").wait_for(timeout=30000)
     page.screenshot(path=f"{OUT}/19-de-card.png")
+
+    step("language for the whole instance")
+
+    def set_language(value):
+        page.goto(BASE + "/config")  # the integration reloads, which removes an open panel
+        page.wait_for_timeout(1500)
+        page.evaluate(
+            """async (value) => {
+          const hass = document.querySelector('home-assistant').hass;
+          const entries = await hass.callWS({type: 'config_entries/get', domain: 'plant_manager'});
+          const base = 'config/config_entries/options/flow';
+          const flow = await hass.callApi('POST', base, {handler: entries[0].entry_id});
+          await hass.callApi('POST', `${base}/${flow.flow_id}`, {next_step_id: 'language'});
+          await hass.callApi('POST', `${base}/${flow.flow_id}`, {language: value});
+        }""",
+            value,
+        )
+        page.wait_for_timeout(3000)  # the integration reloads
+        page.goto(BASE + "/plant-manager/plants")
+
+    def shows(heading, tab, sidebar):
+        panel = page.locator("plant-manager-panel")
+        panel.locator("h2", has_text=heading).wait_for(timeout=30000)
+        panel.locator('[data-action="view"][data-view="today"]', has_text=tab).wait_for(timeout=10000)
+        page.locator("ha-sidebar").get_by_text(sidebar, exact=True).first.wait_for(timeout=30000)
+
+    # The profile is German from the step above: English set for the instance wins.
+    set_language("en")
+    shows("Plants at a glance", "Today", "Plants")
+    page.screenshot(path=f"{OUT}/20-fixed-english.png")
+    page.goto(BASE + "/dashboard-plants/0")
+    page.locator("plant-manager-card").locator("text=Need water").wait_for(timeout=30000)
+
+    # Each user's language again, with the title in Home Assistant's language.
+    set_language("user")
+    shows("Pflanzen im Blick", "Heute", "Plants")
+
+    # An English profile, with German set for the instance.
+    page.evaluate(
+        """() => document.querySelector('home-assistant')
+          .dispatchEvent(new CustomEvent('hass-language-select', { detail: 'en' }))"""
+    )
+    page.wait_for_function(
+        "() => document.querySelector('home-assistant').hass.language === 'en'", timeout=30000
+    )
+    set_language("de")
+    shows("Pflanzen im Blick", "Heute", "Pflanzen")
+    page.screenshot(path=f"{OUT}/21-fixed-german.png")
+    page.goto(BASE + "/dashboard-plants/0")
+    page.locator("plant-manager-card").locator("text=Brauchen Wasser").wait_for(timeout=30000)
+
+    set_language("user")
+    shows("Plants at a glance", "Today", "Plants")
 
     browser.close()
 

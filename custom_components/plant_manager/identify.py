@@ -17,8 +17,10 @@ import voluptuous as vol
 from .const import (
     CONF_AI_TASK_ENTITY,
     CONF_ID_PROVIDER,
+    CONF_LANGUAGE,
     CONF_PLANTID_API_KEY,
     CONF_PLANTNET_API_KEY,
+    LANGUAGE_PER_USER,
     PLANTNET_API,
     PROVIDER_AI_TASK,
     PROVIDER_PLANTID,
@@ -70,13 +72,14 @@ async def async_identify(
     ``media_id`` is the media source id of the same image, used for AI Task attachments.
     """
     provider = config.get(CONF_ID_PROVIDER)
+    lang = _language(hass, config)
 
     if provider == PROVIDER_PLANTNET:
-        candidates = await _plantnet(hass, config[CONF_PLANTNET_API_KEY], image, mime)
+        candidates = await _plantnet(hass, config[CONF_PLANTNET_API_KEY], image, mime, lang)
     elif provider == PROVIDER_PLANTID:
-        candidates = await _plantid(hass, config[CONF_PLANTID_API_KEY], image, mime)
+        candidates = await _plantid(hass, config[CONF_PLANTID_API_KEY], image, mime, lang)
     elif provider == PROVIDER_AI_TASK:
-        candidates = await _ai_task(hass, config.get(CONF_AI_TASK_ENTITY), media_id, mime)
+        candidates = await _ai_task(hass, config.get(CONF_AI_TASK_ENTITY), media_id, mime, lang)
     else:
         raise IdentificationError("no_provider")
 
@@ -84,18 +87,22 @@ async def async_identify(
     return candidates[:5]
 
 
-def _language(hass: HomeAssistant) -> str:
+def _language(hass: HomeAssistant, config: dict[str, Any]) -> str:
+    if (fixed := config.get(CONF_LANGUAGE, LANGUAGE_PER_USER)) != LANGUAGE_PER_USER:
+        return fixed
     return (hass.config.language or "en").split("-")[0]
 
 
-async def _plantnet(hass: HomeAssistant, api_key: str, image: bytes, mime: str) -> list[Candidate]:
+async def _plantnet(
+    hass: HomeAssistant, api_key: str, image: bytes, mime: str, lang: str
+) -> list[Candidate]:
     session = async_get_clientsession(hass)
     form = aiohttp.FormData()
     form.add_field("images", image, filename="plant", content_type=mime)
     form.add_field("organs", "auto")
     params = {
         "api-key": api_key,
-        "lang": _language(hass),
+        "lang": lang,
         "nb-results": "5",
         "include-related-images": "false",
     }
@@ -132,13 +139,15 @@ async def _plantnet(hass: HomeAssistant, api_key: str, image: bytes, mime: str) 
     return candidates
 
 
-async def _plantid(hass: HomeAssistant, api_key: str, image: bytes, mime: str) -> list[Candidate]:
+async def _plantid(
+    hass: HomeAssistant, api_key: str, image: bytes, mime: str, lang: str
+) -> list[Candidate]:
     session = async_get_clientsession(hass)
     body = {
         "images": [f"data:{mime};base64,{base64.b64encode(image).decode()}"],
         "similar_images": False,
     }
-    params = {"details": "common_names,taxonomy", "language": _language(hass)}
+    params = {"details": "common_names,taxonomy", "language": lang}
     try:
         async with session.post(
             PLANTID_URL,
@@ -177,7 +186,7 @@ async def _plantid(hass: HomeAssistant, api_key: str, image: bytes, mime: str) -
 
 
 async def _ai_task(
-    hass: HomeAssistant, entity_id: str | None, media_id: str, mime: str
+    hass: HomeAssistant, entity_id: str | None, media_id: str, mime: str, lang: str
 ) -> list[Candidate]:
     try:
         from homeassistant.components import ai_task
@@ -215,7 +224,7 @@ async def _ai_task(
             instructions=(
                 "Identify the plant species in the attached photo. Use the currently "
                 "accepted botanical name. If unsure about the species, give the genus. "
-                f"Answer common names in the language '{_language(hass)}'."
+                f"Answer common names in the language '{lang}'."
             ),
             structure=structure,
             attachments=[{"media_content_id": media_id, "media_content_type": mime}],

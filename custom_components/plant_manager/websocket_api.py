@@ -67,11 +67,12 @@ def _with_manager(func: Handler) -> Callable[..., Awaitable[None]]:
     async def wrapper(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
     ) -> None:
-        lang = msg["lang"] = i18n.language(msg.get("language") or hass.config.language)
         if (manager := get_manager(hass)) is None:
+            lang = i18n.language(msg.get("language") or hass.config.language)
             message = i18n.tr(lang, "Plant Manager is not loaded")
             connection.send_error(msg["id"], "not_loaded", message)
             return
+        lang = msg["lang"] = manager.ui_language(msg.get("language"))
         try:
             await func(hass, connection, msg, manager)
         except NotFoundError as err:
@@ -112,6 +113,7 @@ def async_register(hass: HomeAssistant) -> None:
     """Register all websocket commands."""
     for command in (
         ws_config,
+        ws_language,
         ws_summary,
         ws_subscribe,
         ws_plants_list,
@@ -146,6 +148,14 @@ def async_register(hass: HomeAssistant) -> None:
 
 
 # -- general -------------------------------------------------------------
+
+
+@_command({vol.Required("type"): f"{DOMAIN}/language"})
+@websocket_api.async_response
+@_with_manager
+async def ws_language(hass, connection, msg, manager: PlantManager) -> None:
+    """The language set for this instance, if any; the cards and the panel ask before they show."""
+    connection.send_result(msg["id"], {"fixed": manager.fixed_language})
 
 
 @_command({vol.Required("type"): f"{DOMAIN}/config"})

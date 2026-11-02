@@ -119,6 +119,52 @@ GERMAN: dict[str, str] = {
     ),
     # errors
     "Plant Manager is not loaded": "Plant Manager ist nicht geladen",
+    "Plants": "Pflanzen",
+    # photo health check
+    "The free Pl@ntNet plan could not be confirmed. No photo was sent.": (
+        "Der kostenlose Pl@ntNet-Tarif konnte nicht bestätigt werden. Es wurde kein Foto gesendet."
+    ),
+    "The free daily quota could not be confirmed. No photo was sent.": (
+        "Das kostenlose Tageskontingent konnte nicht bestätigt werden. "
+        "Es wurde kein Foto gesendet."
+    ),
+    "The free daily quota is used up. Please try again tomorrow.": (
+        "Das kostenlose Tageskontingent ist aufgebraucht. Bitte morgen erneut versuchen."
+    ),
+    "Pl@ntNet did not return a usable list of results.": (
+        "Pl@ntNet hat keine auswertbare Ergebnisliste geliefert."
+    ),
+    "Pl@ntNet rejected the existing access.": "Pl@ntNet hat den vorhandenen Zugang abgelehnt.",
+    "Pl@ntNet could not process the request. Please try again later.": (
+        "Pl@ntNet konnte die Anfrage nicht ausführen. Bitte später erneut versuchen."
+    ),
+    "Pl@ntNet returned an unexpected response.": (
+        "Pl@ntNet hat eine unerwartete Antwort geliefert."
+    ),
+    "Pl@ntNet is not reachable right now or did not return a readable response.": (
+        "Pl@ntNet ist gerade nicht erreichbar oder hat keine lesbare Antwort geliefert."
+    ),
+    "The plant manager has not loaded yet.": "Die Pflanzenverwaltung ist noch nicht geladen.",
+    "The free photo check needs Pl@ntNet access.": (
+        "Für die kostenlose Fotoprüfung fehlt der Pl@ntNet-Zugang."
+    ),
+    "The plant was not found.": "Die Pflanze wurde nicht gefunden.",
+    "A photo check is already running. Please wait a moment.": (
+        "Eine Fotoprüfung läuft bereits. Bitte kurz warten."
+    ),
+    "Please choose a current photo.": "Bitte ein aktuelles Foto auswählen.",
+    "Please use a JPEG or PNG photo.": "Bitte ein JPEG- oder PNG-Foto verwenden.",
+    "The photo is too large or its format is not supported.": (
+        "Das Foto ist zu groß oder das Dateiformat wird nicht unterstützt."
+    ),
+    "Photo check (Pl@ntNet), not a diagnosis. Possible causes: {labels}": (
+        "Fotoprüfung (Pl@ntNet), keine Diagnose. Mögliche Ursachen: {labels}"
+    ),
+    "Photo check (Pl@ntNet), not a diagnosis. No usable match. "
+    "This does not confirm that the plant is healthy.": (
+        "Fotoprüfung (Pl@ntNet), keine Diagnose. Kein auswertbarer Treffer. "
+        "Das ist keine Bestätigung, dass die Pflanze gesund ist."
+    ),
     "Not loaded": "Nicht geladen",
     "Plant not found": "Pflanze nicht gefunden",
     "Plant {id} not found": "Pflanze {id} nicht gefunden",

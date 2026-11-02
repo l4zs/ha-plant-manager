@@ -42,6 +42,7 @@ from .alerts import (
 )
 from .const import (
     CONF_ID_PROVIDER,
+    CONF_LANGUAGE,
     CONF_NOTIFY_ALERTS,
     CONF_NOTIFY_SERVICE,
     CONF_REMINDER_TIME,
@@ -57,6 +58,7 @@ from .const import (
     EVENT_WATERING_DUE,
     KIND_SNOOZE,
     KIND_WATER as CARE_WATER,
+    LANGUAGE_PER_USER,
     NAME,
     PANEL_URL_PATH,
     PHOTO_DIR,
@@ -166,8 +168,18 @@ class PlantManager:
 
     @property
     def language(self) -> str:
-        """Home Assistant's language: for the calendar, sitters and everything not per user."""
-        return i18n.language(self.hass.config.language)
+        """The language for the calendar, sitters and everything not per user."""
+        return self.ui_language(None)
+
+    @property
+    def fixed_language(self) -> str | None:
+        """The language set for this whole instance, if any."""
+        chosen = self.options[CONF_LANGUAGE]
+        return None if chosen == LANGUAGE_PER_USER else chosen
+
+    def ui_language(self, requested: str | None) -> str:
+        """The language for a request: the instance's fixed one, or what the user asked for."""
+        return self.fixed_language or i18n.language(requested or self.hass.config.language)
 
     async def async_setup(self) -> None:
         """Open the database and start the schedule."""
@@ -622,7 +634,7 @@ class PlantManager:
         return {t for settings in self.notify_users.values() for t in settings["targets"]}
 
     def _user_language(self, settings: dict[str, Any]) -> str:
-        return i18n.language(settings.get("language") or self.language)
+        return self.ui_language(settings.get("language"))
 
     def _targets(self, *, problems: bool = False, daily: bool = False) -> dict[str, str]:
         """Notify actions that get problems or the daily summary, with their language.

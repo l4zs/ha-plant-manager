@@ -18,7 +18,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PLANTNET_API_KEY, MAX_PHOTO_BYTES, PLANTNET_API
 from .db import NotFoundError
-from .http import _read_file
+from .http import _language, _read_file, _t
+from .i18n import tr
 from .manager import get_manager, image_extension
 
 TIMEOUT = aiohttp.ClientTimeout(total=45)
@@ -46,8 +47,7 @@ def free_quota(subscription: dict, daily: dict) -> dict:
     restricted = plan is None and subscription.get("contract_restricted") is True
     if str(plan).lower() != "free" and not restricted:
         raise CheckError(
-            "Der kostenlose Pl@ntNet-Tarif konnte nicht bestätigt werden. "
-            "Es wurde kein Foto gesendet."
+            "The free Pl@ntNet plan could not be confirmed. No photo was sent."
         )
     quota = daily.get("quota")
     identify = quota.get("identify") if isinstance(quota, dict) else None
@@ -55,14 +55,9 @@ def free_quota(subscription: dict, daily: dict) -> dict:
         identify = {}
     remaining, total = identify.get("remaining"), identify.get("total")
     if type(remaining) is not int or type(total) is not int or total <= 0:
-        raise CheckError(
-            "Das kostenlose Tageskontingent konnte nicht bestätigt werden. "
-            "Es wurde kein Foto gesendet."
-        )
+        raise CheckError("The free daily quota could not be confirmed. No photo was sent.")
     if remaining < 1:
-        raise CheckError(
-            "Das kostenlose Tageskontingent ist aufgebraucht. Bitte morgen erneut versuchen."
-        )
+        raise CheckError("The free daily quota is used up. Please try again tomorrow.")
     return {"remaining": remaining, "total": total, "plan": "free"}
 
 
@@ -71,7 +66,7 @@ def candidates_from(payload: dict) -> list[dict]:
     out = []
     rows = payload.get("results", [])
     if not isinstance(rows, list):
-        raise CheckError("Pl@ntNet hat keine auswertbare Ergebnisliste geliefert.")
+        raise CheckError("Pl@ntNet did not return a usable list of results.")
     for row in rows[:MAX_CANDIDATES]:
         if not isinstance(row, dict):
             continue
@@ -88,12 +83,12 @@ def candidates_from(payload: dict) -> list[dict]:
     return sorted(out, key=lambda r: r["score"], reverse=True)
 
 
-async def _api(session, key: str, route: str, data=None) -> dict:
+async def _api(session, key: str, route: str, data=None, lang: str = "en") -> dict:
     """Do not propagate aiohttp exceptions: their URLs contain the API key."""
     params = {"api-key": key}
     if data is not None:
         params.update(
-            {"lang": "de", "nb-results": str(MAX_CANDIDATES), "include-related-images": "false"}
+            {"lang": lang, "nb-results": str(MAX_CANDIDATES), "include-related-images": "false"}
         )
     method = session.post if data is not None else session.get
     try:
@@ -103,25 +98,20 @@ async def _api(session, key: str, route: str, data=None) -> dict:
             if resp.status == 403 and route == "/subscription":
                 return {"contract_restricted": True}
             if resp.status in (401, 403):
-                raise CheckError("Pl@ntNet hat den vorhandenen Zugang abgelehnt.")
+                raise CheckError("Pl@ntNet rejected the existing access.")
             if resp.status == 429:
-                raise CheckError(
-                    "Das kostenlose Tageskontingent ist aufgebraucht. "
-                    "Bitte morgen erneut versuchen."
-                )
+                raise CheckError("The free daily quota is used up. Please try again tomorrow.")
             if resp.status == 404 and data is not None:
                 return {"results": []}
             if resp.status >= 400:
-                raise CheckError(
-                    "Pl@ntNet konnte die Anfrage nicht ausführen. Bitte später erneut versuchen."
-                )
+                raise CheckError("Pl@ntNet could not process the request. Please try again later.")
             value = await resp.json()
             if not isinstance(value, dict):
-                raise CheckError("Pl@ntNet hat eine unerwartete Antwort geliefert.")
+                raise CheckError("Pl@ntNet returned an unexpected response.")
             return value
     except (aiohttp.ClientError, TimeoutError, ValueError):
         raise CheckError(
-            "Pl@ntNet ist gerade nicht erreichbar oder hat keine lesbare Antwort geliefert."
+            "Pl@ntNet is not reachable right now or did not return a readable response."
         ) from None
 
 
@@ -167,14 +157,14 @@ class HealthView(HomeAssistantView):
     async def _context(self, request, plant_id):
         manager = get_manager(request.app[KEY_HASS])
         if manager is None:
-            raise CheckError("Die Pflanzenverwaltung ist noch nicht geladen.")
+            raise CheckError("The plant manager has not loaded yet.")
         plant = await manager._run(manager.db.get_plant, plant_id)
         return manager, plant
 
     async def _quota(self, request, manager):
         key = manager.options.get(CONF_PLANTNET_API_KEY)
         if not key:
-            raise CheckError("Für die kostenlose Fotoprüfung fehlt der Pl@ntNet-Zugang.")
+            raise CheckError("The free photo check needs Pl@ntNet access.")
         session = async_get_clientsession(request.app[KEY_HASS])
         sub = await _api(session, key, "/subscription")
         daily = await _api(session, key, "/quota/daily")
@@ -190,28 +180,31 @@ class HealthView(HomeAssistantView):
                 _, _, quota = await self._quota(request, manager)
                 result.update(ready=True, quota=quota)
             except CheckError as err:
-                result["message"] = str(err)
+                result["message"] = _t(request, str(err))
             return self.json(result)
         except NotFoundError:
-            return self.json_message("Die Pflanze wurde nicht gefunden.", 404)
+            return self.json_message(_t(request, "The plant was not found."), 404)
         except CheckError as err:
-            return self.json_message(str(err), 503)
+            return self.json_message(_t(request, str(err)), 503)
 
     async def post(self, request, plant_id):
         """Check one photo, and keep the result with the plant."""
         hass = request.app[KEY_HASS]
         lock = hass.data.setdefault(LOCK_KEY, asyncio.Lock())
         if lock.locked():
-            return self.json_message("Eine Fotoprüfung läuft bereits. Bitte kurz warten.", 429)
+            return self.json_message(
+                _t(request, "A photo check is already running. Please wait a moment."), 429
+            )
         try:
             async with lock:
                 manager, plant = await self._context(request, plant_id)
+                lang = _language(request)
                 data = await _read_file(request, MAX_PHOTO_BYTES)
                 if not data:
-                    return self.json_message("Bitte ein aktuelles Foto auswählen.", 400)
+                    return self.json_message(_t(request, "Please choose a current photo."), 400)
                 extension = image_extension(data)
                 if extension not in ("jpg", "jpeg", "png"):
-                    return self.json_message("Bitte ein JPEG- oder PNG-Foto verwenden.", 415)
+                    return self.json_message(_t(request, "Please use a JPEG or PNG photo."), 415)
                 # This must precede the only inference call, every time.
                 session, key, quota = await self._quota(request, manager)
                 await manager._run(_history, manager, plant_id)
@@ -223,7 +216,9 @@ class HealthView(HomeAssistantView):
                     content_type="image/png" if extension == "png" else "image/jpeg",
                 )
                 form.add_field("organs", "auto")
-                payload = await _api(session, key, "/diseases/identify", form)
+                payload = await _api(
+                    session, key, "/diseases/identify", form, lang
+                )
                 candidates = candidates_from(payload)
                 photo = await manager.async_add_photo(plant_id, data, "health-check")
                 record = {
@@ -240,24 +235,24 @@ class HealthView(HomeAssistantView):
                 await manager._run(_save, manager, plant_id, record)
                 if candidates:
                     labels = "; ".join(c["label"] for c in candidates[:NOTE_CANDIDATES])
-                    finding = "Mögliche Ursachen: " + labels
-                else:
-                    finding = (
-                        "Kein auswertbarer Treffer. "
-                        "Das ist keine Bestätigung, dass die Pflanze gesund ist."
+                    note = tr(
+                        lang,
+                        "Photo check (Pl@ntNet), not a diagnosis. Possible causes: {labels}",
+                        labels=labels,
                     )
-                await manager.async_log(
-                    plant_id,
-                    "note",
-                    notes="Fotoprüfung (Pl@ntNet), keine Diagnose. " + finding,
-                    source="health-check",
-                )
+                else:
+                    note = tr(
+                        lang,
+                        "Photo check (Pl@ntNet), not a diagnosis. No usable match. "
+                        "This does not confirm that the plant is healthy.",
+                    )
+                await manager.async_log(plant_id, "note", notes=note, source="health-check")
                 return self.json(record)
         except NotFoundError:
-            return self.json_message("Die Pflanze wurde nicht gefunden.", 404)
+            return self.json_message(_t(request, "The plant was not found."), 404)
         except CheckError as err:
-            return self.json_message(str(err), 400)
+            return self.json_message(_t(request, str(err)), 400)
         except ValueError:
             return self.json_message(
-                "Das Foto ist zu groß oder das Dateiformat wird nicht unterstützt.", 413
+                _t(request, "The photo is too large or its format is not supported."), 413
             )

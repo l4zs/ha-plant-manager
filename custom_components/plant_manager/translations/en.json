@@ -16,7 +16,8 @@
         "title": "Plant Manager options",
         "menu_options": {
           "identification": "Plant identification and care data",
-          "reminders": "Reminders and weather"
+          "reminders": "Reminders and weather",
+          "language": "Language"
         }
       },
       "identification": {
@@ -47,6 +48,18 @@
           "notify_service": "A phone with the Home Assistant app (or another notify action) for everyone: problems right away, and a daily summary of what to water and fertilize. Each person can also choose their own phones and time with the 🔔 button in the Plants panel.",
           "reminder_time": "When the daily summary is sent.",
           "weather_entity": "Outdoor plants without their own sensors use its temperature and humidity; rain counts as watering for uncovered plants."
+        }
+      },
+      "language": {
+        "title": "Language",
+        "description": "By default, everyone sees Plant Manager in the language of their Home Assistant profile. Things that are the same for everyone, like the sidebar title, the calendar and the sitter's plan, use the language of this Home Assistant.",
+        "data": {
+          "language": "Language",
+          "sidebar_title": "Sidebar title"
+        },
+        "data_description": {
+          "language": "Choose a language to use it on this Home Assistant for every user: the panel, the cards, notifications, the calendar, plant identification and the sidebar title. Refresh open browser tabs afterwards.",
+          "sidebar_title": "Leave empty for \"Plants\" in the language above, or in the language of this Home Assistant if every user has their own."
         }
       }
     },
@@ -82,14 +95,32 @@
         "mist": "Misted",
         "note": "Note"
       }
+    },
+    "language": {
+      "options": {
+        "user": "Each user's language",
+        "en": "English",
+        "de": "German"
+      }
     }
   },
   "entity": {
     "sensor": {
-      "plants": { "name": "Plants", "unit_of_measurement": "plants" },
-      "needs_water": { "name": "Plants needing water", "unit_of_measurement": "plants" },
-      "problems": { "name": "Plants with problems", "unit_of_measurement": "plants" },
-      "next_watering": { "name": "Next watering" },
+      "plants": {
+        "name": "Plants",
+        "unit_of_measurement": "plants"
+      },
+      "needs_water": {
+        "name": "Plants needing water",
+        "unit_of_measurement": "plants"
+      },
+      "problems": {
+        "name": "Plants with problems",
+        "unit_of_measurement": "plants"
+      },
+      "next_watering": {
+        "name": "Next watering"
+      },
       "status": {
         "name": "Watering status",
         "state": {
@@ -99,26 +130,50 @@
           "overdue": "Overdue"
         }
       },
-      "water_reserve": { "name": "Estimated water reserve" },
-      "watering_interval": { "name": "Watering interval" },
-      "last_watered": { "name": "Last watered" },
-      "next_fertilization": { "name": "Next fertilization" }
+      "water_reserve": {
+        "name": "Estimated water reserve"
+      },
+      "watering_interval": {
+        "name": "Watering interval"
+      },
+      "last_watered": {
+        "name": "Last watered"
+      },
+      "next_fertilization": {
+        "name": "Next fertilization"
+      }
     },
     "binary_sensor": {
-      "needs_water": { "name": "Needs water" },
-      "problem": { "name": "Problem" },
-      "vacation": { "name": "Vacation" }
+      "needs_water": {
+        "name": "Needs water"
+      },
+      "problem": {
+        "name": "Problem"
+      },
+      "vacation": {
+        "name": "Vacation"
+      }
     },
     "button": {
-      "water": { "name": "Watered" },
-      "snooze": { "name": "Soil still moist" },
-      "fertilize": { "name": "Fertilized" }
+      "water": {
+        "name": "Watered"
+      },
+      "snooze": {
+        "name": "Soil still moist"
+      },
+      "fertilize": {
+        "name": "Fertilized"
+      }
     },
     "todo": {
-      "care_tasks": { "name": "Plant care" }
+      "care_tasks": {
+        "name": "Plant care"
+      }
     },
     "calendar": {
-      "care_calendar": { "name": "Plant care" }
+      "care_calendar": {
+        "name": "Plant care"
+      }
     }
   },
   "services": {
@@ -126,34 +181,64 @@
       "name": "Water",
       "description": "Logs that plants were watered.",
       "fields": {
-        "plant_id": { "name": "Plants", "description": "Plant IDs (shown in the plant's dialog in the panel)." },
-        "at": { "name": "When", "description": "When they were watered. Defaults to now." },
-        "feedback": { "name": "Soil before watering", "description": "How dry the soil was. Tunes future reminders for the plant." }
+        "plant_id": {
+          "name": "Plants",
+          "description": "Plant IDs (shown in the plant's dialog in the panel)."
+        },
+        "at": {
+          "name": "When",
+          "description": "When they were watered. Defaults to now."
+        },
+        "feedback": {
+          "name": "Soil before watering",
+          "description": "How dry the soil was. Tunes future reminders for the plant."
+        }
       }
     },
     "snooze": {
       "name": "Soil still moist",
       "description": "Postpones the watering reminder and learns a slightly longer interval.",
       "fields": {
-        "plant_id": { "name": "Plants", "description": "Plant IDs." }
+        "plant_id": {
+          "name": "Plants",
+          "description": "Plant IDs."
+        }
       }
     },
     "fertilize": {
       "name": "Fertilize",
       "description": "Logs that plants were fertilized.",
       "fields": {
-        "plant_id": { "name": "Plants", "description": "Plant IDs." },
-        "at": { "name": "When", "description": "Defaults to now." }
+        "plant_id": {
+          "name": "Plants",
+          "description": "Plant IDs."
+        },
+        "at": {
+          "name": "When",
+          "description": "Defaults to now."
+        }
       }
     },
     "log_care": {
       "name": "Log care",
       "description": "Adds an entry to the care log: fertilized, repotted, pruned, misted, or a note.",
       "fields": {
-        "plant_id": { "name": "Plants", "description": "Plant IDs." },
-        "kind": { "name": "What", "description": "The kind of care." },
-        "at": { "name": "When", "description": "Defaults to now." },
-        "notes": { "name": "Notes", "description": "Optional notes." }
+        "plant_id": {
+          "name": "Plants",
+          "description": "Plant IDs."
+        },
+        "kind": {
+          "name": "What",
+          "description": "The kind of care."
+        },
+        "at": {
+          "name": "When",
+          "description": "Defaults to now."
+        },
+        "notes": {
+          "name": "Notes",
+          "description": "Optional notes."
+        }
       }
     },
     "send_reminder": {
@@ -164,19 +249,40 @@
       "name": "Identify plant",
       "description": "Identifies a plant from a camera snapshot or an image file and returns candidate species.",
       "fields": {
-        "camera_entity_id": { "name": "Camera", "description": "Camera to take a snapshot from." },
-        "image_path": { "name": "Image path", "description": "Path to an image in an allowlisted directory." }
+        "camera_entity_id": {
+          "name": "Camera",
+          "description": "Camera to take a snapshot from."
+        },
+        "image_path": {
+          "name": "Image path",
+          "description": "Path to an image in an allowlisted directory."
+        }
       }
     },
     "set_vacation": {
       "name": "Plan vacation",
       "description": "Plans a vacation (or changes the planned one): what to water before leaving, and when a plant sitter has to come.",
       "fields": {
-        "start_date": { "name": "Leaving", "description": "The day you leave (in the morning)." },
-        "end_date": { "name": "Back", "description": "The day you are back (in the evening)." },
-        "sitter": { "name": "Plant sitter", "description": "Who waters while you are away." },
-        "sitter_notify": { "name": "Sitter's notify action", "description": "Sends the plant sitter a reminder on each day they need to come, e.g. notify.mobile_app_anna." },
-        "notes": { "name": "Notes", "description": "Added to the plan for the sitter (where the key is, the watering can, ...)." }
+        "start_date": {
+          "name": "Leaving",
+          "description": "The day you leave (in the morning)."
+        },
+        "end_date": {
+          "name": "Back",
+          "description": "The day you are back (in the evening)."
+        },
+        "sitter": {
+          "name": "Plant sitter",
+          "description": "Who waters while you are away."
+        },
+        "sitter_notify": {
+          "name": "Sitter's notify action",
+          "description": "Sends the plant sitter a reminder on each day they need to come, e.g. notify.mobile_app_anna."
+        },
+        "notes": {
+          "name": "Notes",
+          "description": "Added to the plan for the sitter (where the key is, the watering can, ...)."
+        }
       }
     },
     "end_vacation": {
@@ -185,7 +291,11 @@
     }
   },
   "exceptions": {
-    "not_loaded": { "message": "Plant Manager is not loaded." },
-    "path_not_allowed": { "message": "Access to {path} is not allowed. Add its folder to allowlist_external_dirs." }
+    "not_loaded": {
+      "message": "Plant Manager is not loaded."
+    },
+    "path_not_allowed": {
+      "message": "Access to {path} is not allowed. Add its folder to allowlist_external_dirs."
+    }
   }
 }

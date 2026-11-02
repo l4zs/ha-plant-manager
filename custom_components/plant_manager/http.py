@@ -29,7 +29,10 @@ def _manager(request: web.Request) -> PlantManager | None:
 
 def _language(request: web.Request) -> str:
     """The UI's language (the panel adds it to the URL), or Home Assistant's."""
-    return language(request.query.get("language") or request.app[KEY_HASS].config.language)
+    requested = request.query.get("language")
+    if (manager := _manager(request)) is not None:
+        return manager.ui_language(requested)
+    return language(requested or request.app[KEY_HASS].config.language)
 
 
 def _t(request: web.Request, message: str) -> str:

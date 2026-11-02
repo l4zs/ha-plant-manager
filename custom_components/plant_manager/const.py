@@ -16,7 +16,7 @@ STAGING_DIR: Final = "_staging"
 
 PANEL_URL_PATH: Final = "plant-manager"
 PANEL_COMPONENT: Final = "plant-manager-panel"
-PANEL_TITLE: Final = "Pflanzen"
+PANEL_TITLE: Final = "Plants"
 PANEL_ICON: Final = "mdi:sprout"
 STATIC_URL: Final = "/plant_manager_static"
 CARD_FILENAME: Final = "plant-manager-card.js"
@@ -51,6 +51,10 @@ CONF_WEATHER_ENTITY: Final = "weather_entity"
 CONF_NOTIFY_ALERTS: Final = "notify_alerts"
 CONF_NOTIFY_SERVICE: Final = "notify_service"
 CONF_REMINDER_TIME: Final = "reminder_time"
+CONF_LANGUAGE: Final = "language"
+CONF_SIDEBAR_TITLE: Final = "sidebar_title"
+
+LANGUAGE_PER_USER: Final = "user"
 
 PROVIDER_NONE: Final = "none"
 PROVIDER_PLANTNET: Final = "plantnet"
@@ -69,6 +73,8 @@ DEFAULT_OPTIONS: Final = {
     CONF_NOTIFY_ALERTS: True,
     CONF_NOTIFY_SERVICE: "",
     CONF_REMINDER_TIME: "09:00:00",
+    CONF_LANGUAGE: LANGUAGE_PER_USER,
+    CONF_SIDEBAR_TITLE: "",
 }
 
 UNDO_WINDOW_MINUTES: Final = 15
